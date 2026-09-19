@@ -442,7 +442,8 @@ validation and release workflows.
   assistant.
 - Added the `Android Integration` job after `Android Checks`, on the existing
   PR, `main` push, and manual triggers. It uses Ubuntu 24.04, runner-user KVM
-  access, and an API 36 Google APIs x86_64 Pixel 8 emulator. The emulator action
+  access, and an API 36 Google APIs x86_64 emulator with the default AVD hardware
+  configuration. The local Pixel 8 AVD is unchanged. The emulator action
   is commit-pinned; SDK Manager image/emulator revisions are not frozen.
 - The emulator action waits for boot and shuts down afterward. The test script
   runs `make integration-test` with a fifteen-minute timeout, preserves failing
@@ -450,8 +451,18 @@ validation and release workflows.
   logs are retained for seven days, including on test failure. Read-only
   permissions and the untrusted-PR safeguards remain in place.
 - Actionlint, YAML and shell checks, scripted success/failure propagation tests,
-  and the real test script on the local emulator passed. Hosted emulator boot,
-  execution, artifact upload, and required-check enforcement remain unverified.
+  and the real test script on the local emulator passed. The user confirms the
+  hosted `Android Integration` job now passes after the AVD profile fix.
+  The user also confirms the log artifact contains test output and Logcat, and
+  `Android Integration` is required before merging. These remote checks were
+  user-verified, not independently inspected by the assistant.
+- Hosted run `35467353206` failed while creating the AVD because the runner's
+  `avdmanager` did not recognize `pixel_8`. Removed the optional hardware profile;
+  the pinned action now omits `--device`, preserving API 36, Google APIs, and
+  x86_64. Local workflow checks passed; the user subsequently confirmed a
+  successful hosted run. The assistant has not independently inspected that run.
+  The SDK XML-version warning is separate; the later ADB connection refusal
+  occurred during cleanup because no emulator had started.
 
 ## 9. Release Pipeline
 
@@ -588,8 +599,9 @@ sections retain reference guidance and tasks that can be done before scaffolding
 - [x] Add Flutter SDK `integration_test` and run the starter Android smoke test.
       `integration_test/app_test.dart` launches the app through `main()`, checks
       the Cookbook screen, and verifies counter changes from 0 to 1 to 2.
-      Passed on the Android emulator (`emulator-5554`); physical-phone execution
-      of this automated test and emulator CI have not been verified.
+      Passed on the local Android emulator (`emulator-5554`) and in hosted
+      emulator CI (user confirmed). Physical-phone execution of this automated
+      test has not been verified.
 - [ ] Extend integration coverage to a critical feature workflow once real app
       features exist; the counter test verifies only the starter setup.
 - [ ] Measure performance on real hardware in profile mode, not debug mode.
@@ -621,10 +633,12 @@ sections retain reference guidance and tasks that can be done before scaffolding
       (configured and verified by the user).
 - [x] Implement emulator integration CI using section 8's safeguards and validate
       its workflow and test script locally.
-- [ ] Push the integration CI changes and verify a successful hosted
-      `Android Integration` job, including the test-output and Logcat artifact.
-- [ ] Require `Android Integration` before merging after its first successful
-      hosted run; the existing `Android Checks` rule does not enforce this job.
+- [x] Push the AVD profile fix and verify a successful hosted
+      `Android Integration` job (user confirmed).
+- [x] Verify the hosted `android-integration-logs` artifact contains the
+      test-output and Logcat files (user confirmed).
+- [x] Require `Android Integration` before merging after its first successful
+      hosted run (configured and verified by the user).
 - [x] Configure a dedicated release signing configuration, reading private
       properties from `~/.config/cookbook/key.properties` or the path in
       `COOKBOOK_SIGNING_PROPERTIES`. Missing credentials block release preparation;
