@@ -433,7 +433,19 @@ validation and release workflows.
   assistant. The user configured the required `Android Checks` status check
   through GitHub's ruleset or branch protection settings and confirms it works.
   Remote enforcement was user-verified, not independently inspected by the
-  assistant. Emulator integration CI is deferred.
+  assistant.
+- Added the `Android Integration` job after `Android Checks`, on the existing
+  PR, `main` push, and manual triggers. It uses Ubuntu 24.04, runner-user KVM
+  access, and an API 36 Google APIs x86_64 Pixel 8 emulator. The emulator action
+  is commit-pinned; SDK Manager image/emulator revisions are not frozen.
+- The emulator action waits for boot and shuts down afterward. The test script
+  runs `make integration-test` with a fifteen-minute timeout, preserves failing
+  exit codes through log capture, and collects Logcat before shutdown. Available
+  logs are retained for seven days, including on test failure. Read-only
+  permissions and the untrusted-PR safeguards remain in place.
+- Actionlint, YAML and shell checks, scripted success/failure propagation tests,
+  and the real test script on the local emulator passed. Hosted emulator boot,
+  execution, artifact upload, and required-check enforcement remain unverified.
 
 ## 9. Release Pipeline
 
@@ -589,8 +601,12 @@ sections retain reference guidance and tasks that can be done before scaffolding
       (user confirmed, including APK build and artifact uploads).
 - [x] Require `Android Checks` before merging via a branch ruleset or protection
       (configured and verified by the user).
-- [ ] Run an integration smoke test on important pull requests or a scheduled
-      job using section 8's emulator and untrusted-contribution safeguards.
+- [x] Implement emulator integration CI using section 8's safeguards and validate
+      its workflow and test script locally.
+- [ ] Push the integration CI changes and verify a successful hosted
+      `Android Integration` job, including the test-output and Logcat artifact.
+- [ ] Require `Android Integration` before merging after its first successful
+      hosted run; the existing `Android Checks` rule does not enforce this job.
 - [ ] Configure release signing explicitly; a template build that uses debug
       signing is not ready for Play distribution.
 - [ ] Set a user-facing version and monotonically increasing Android build number.
