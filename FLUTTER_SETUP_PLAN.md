@@ -130,19 +130,15 @@ duplicate Flutter/Dart tooling. Git support and the testing UI are already built
 into VS Code. Flutter DevTools is available through Flutter tooling; no separate
 DevTools extension is required. AI assistance is optional, not a pipeline dependency.
 
-During implementation:
+Editor configuration:
 
-- [ ] Open the Flutter project root, not just its Android subdirectory.
 - [x] Set the Dart extension as the formatter for Dart files and enable
       format-on-save for Dart.
 - [x] Configure the extension to use the terminal's Flutter SDK in user settings.
-- [ ] Confirm the active extension reports that SDK after opening a Flutter project.
 - [x] Add team extension recommendations and portable workspace settings to the
       repository. Keep machine-specific absolute SDK paths in user settings.
-- [ ] Start with the default F5 launch behavior; add launch configurations only
-      when flavors or environment arguments require them.
-- [ ] Verify completion, diagnostics, a Dart breakpoint, hot reload, the testing
-      UI, and Flutter Inspector.
+
+Pending app-dependent editor checks are collected in section 11 at the end.
 
 ### Editor Setup Status
 
@@ -198,7 +194,6 @@ Initial AVD recommendation:
       the emulator as root or make `/dev/kvm` world-writable.
 - [x] Verify acceleration with `emulator -accel-check` after PATH setup.
 - [x] Create and boot the AVD, then confirm Flutter detects it.
-- [ ] Select the device from VS Code's status bar and launch the app with F5.
 
 ```bash
 emulator -accel-check
@@ -232,18 +227,14 @@ flutter emulators --launch Pixel_8_API_36
 ```
 
 VS Code device selection and F5 remain pending until the Flutter app exists.
-Physical-phone setup and the broader device coverage below are not yet verified.
+Those checks and app-dependent device coverage are collected in section 11.
+Physical-phone setup below is not yet verified.
 
 ### Device Coverage
 
 - [ ] Keep at least one real Android phone for release and performance testing.
       Enable Developer options and USB debugging, authorize this computer, and
       configure Linux USB/udev permissions if required.
-- [ ] Add a device/image at the app's minimum supported API before release.
-- [ ] Test the latest stable Android version, small screens, large text, rotation,
-      and a tablet/foldable size if those form factors are supported.
-- [ ] Check permission denial, offline behavior, background/resume behavior, and
-      notifications where applicable.
 
 The emulator API, compile SDK, target SDK, and minimum SDK are different settings.
 Use Flutter's compatible build defaults initially, then choose minimum support
@@ -254,19 +245,17 @@ and target API based on plugin requirements and current Play policy.
 - [ ] Agree on the app name, repository layout, and permanent Android application
       ID before scaffolding. Do not overwrite existing repository content.
 - [ ] Create an Android-targeted Flutter app through VS Code or the Flutter CLI.
-- [ ] Keep the app's `pubspec.lock` in Git for reproducible dependency resolution.
-- [ ] Keep generated build output, SDK caches, local SDK paths, credentials, and
-      signing material out of Git; review the generated ignore rules.
 - [ ] Start with Flutter's standard project layout. Select state management,
       routing, storage, and HTTP packages only when application requirements justify them.
 - [ ] Review plugin maintenance, licenses, supported Android APIs, native
       dependencies, permissions, and security before adoption.
-- [ ] Review `flutter pub outdated` regularly; upgrade in a separate change and
-      rerun tests. An outdated-package report is not a security vulnerability scan.
-- [ ] Use a dependency update service such as Dependabot or Renovate if supported
-      by the chosen repository host; include security/advisory review.
+
+Post-scaffolding repository and dependency tasks are collected in section 11.
 
 ## 5. Formatting, Linting, and Static Analysis
+
+The following is reference guidance; app-dependent execution is tracked in
+section 11.
 
 Use the built-in Dart formatter and analyzer with **flutter_lints** as the initial
 lint baseline. Flutter templates normally include this development dependency;
@@ -324,32 +313,18 @@ Use fakes/mocks to isolate ordinary tests from production services. Standard
 `integration_test` cannot drive all native UI, such as Android permission dialogs;
 consider Patrol only if automating those interactions becomes necessary.
 
-- [ ] Confirm VS Code breakpoints, variable inspection, and hot reload work.
-- [ ] Use Flutter Inspector for layout and DevTools for memory/network/performance.
-- [ ] Measure performance on real hardware in profile mode, not debug mode.
-- [ ] Track coverage for important logic; generating a report does not enforce
-      a threshold. Set an explicit threshold later if useful.
-- [ ] Add targeted golden/screenshot tests for stable visual requirements, using
-      a consistent OS, fonts, and rendering environment.
+Pending testing and debugging tasks are collected in section 11.
 
 ## 7. Configuration, Security, and Observability
 
-- [ ] Separate development and production API endpoints. Start with documented
-      `--dart-define` values; add Android flavors when separate app IDs, service
-      configurations, or side-by-side installations are needed.
 - [ ] Never treat `--dart-define`, bundled environment files, or obfuscation as
       secret storage. Privileged secrets belong on a backend, not in the app binary.
 - [ ] Keep signing passwords and CI credentials out of Git and logs. Store local
       sensitive values securely and use the CI platform's protected secret store.
-- [ ] Use HTTPS and request only necessary Android permissions. If network access
-      is needed, verify the release manifest includes the Internet permission.
-- [ ] For local APIs, remember that emulator `localhost` refers to the emulator;
-      the standard Android emulator reaches the host through `10.0.2.2`. Keep any
-      development cleartext exceptions out of production configuration.
-- [ ] Keep logs free of credentials and sensitive personal data.
 - [ ] Before production, select crash reporting such as Crashlytics or Sentry
       based on privacy requirements; analytics is a separate, optional decision.
-- [ ] Test accessibility with TalkBack and large text; check contrast and touch targets.
+
+App-specific configuration and verification tasks are collected in section 11.
 
 ## 8. Continuous Integration
 
@@ -359,6 +334,9 @@ a mobile-focused hosted pipeline. Neither CI hosting nor cloud services need to
 be provisioned for initial local setup.
 
 ### Pull Request Gate
+
+This is the reference pipeline; implementation and verification are tracked in
+section 11 after an app exists.
 
 1. Check out the repository with minimal permissions.
 2. Install the exact pinned Flutter SDK, compatible JDK, and required Android SDK
@@ -386,19 +364,13 @@ validation and release workflows.
       verification, target API, testing, privacy, and Data safety requirements.
 - [ ] Configure Play App Signing and a dedicated upload key. Back up the upload
       keystore securely and restrict access.
-- [ ] Configure release signing explicitly; a template build that uses debug
-      signing is not ready for Play distribution.
 - [ ] Keep the keystore and signing properties outside version control. Inject
       them only into approved release jobs and clean temporary copies afterward.
-- [ ] Set a user-facing version and monotonically increasing Android build number.
-- [ ] Run tests, then build with `flutter build appbundle --release` using the
-      intended production configuration.
-- [ ] Retain the AAB and, when applicable, obfuscation symbols/mapping files with
-      the release's source revision and toolchain version.
-- [ ] Test through Google Play's internal track on real hardware before promotion.
-      An AAB cannot be installed directly like an APK.
 - [ ] Require approval before production promotion. Use staged rollout and plan
       for stopping a rollout and shipping a higher-build-number fix.
+
+App-specific signing, build, and release validation tasks are collected in
+section 11; they are not prerequisites for the first example app.
 
 Start with manual upload to the internal track. Add fastlane or a reviewed Play
 publishing integration later if release frequency warrants it. Check CI artifact
@@ -431,3 +403,83 @@ builds would require macOS and Xcode and are outside this Linux/Android plan.
 - [Flutter DevTools](https://docs.flutter.dev/tools/devtools)
 - [Android releases and signing](https://docs.flutter.dev/deployment/android)
 - [Flutter continuous delivery](https://docs.flutter.dev/deployment/cd)
+
+## 11. Pending Steps Requiring an App
+
+These steps remain unchecked until at least an example Flutter app has been
+created in section 4. Start with the example-app checks; feature-specific and
+release tasks need a more developed app and apply only when relevant. Earlier
+sections retain reference guidance and tasks that can be done before scaffolding.
+
+### Example App and VS Code Verification
+
+- [ ] Open the Flutter project root, not just its Android subdirectory.
+- [ ] Confirm the active extension reports the configured Flutter SDK after
+      opening a Flutter project.
+- [ ] Start with the default F5 launch behavior; add launch configurations only
+      when flavors or environment arguments require them.
+- [ ] Select the device from VS Code's status bar and launch the app with F5.
+- [ ] Verify completion, diagnostics, a Dart breakpoint, hot reload, the testing
+      UI, and Flutter Inspector.
+- [ ] Confirm VS Code breakpoints, variable inspection, and hot reload work.
+- [ ] Use Flutter Inspector for layout and DevTools for memory/network/performance.
+
+### Project Baseline and Quality Checks
+
+- [ ] Keep the app's `pubspec.lock` in Git for reproducible dependency resolution.
+- [ ] Keep generated build output, SDK caches, local SDK paths, credentials, and
+      signing material out of Git; review the generated ignore rules.
+- [ ] Verify the template's `flutter_lints` dependency and analyzer configuration
+      using section 5; avoid adding a second ruleset.
+- [ ] Run dependency resolution, formatting, static analysis, and widget/unit
+      tests with coverage using the commands in section 5.
+- [ ] Build a debug APK with `flutter build apk --debug` to verify Android
+      project-level toolchain compatibility.
+- [ ] Review `flutter pub outdated` regularly; upgrade in a separate change and
+      rerun tests. An outdated-package report is not a security vulnerability scan.
+- [ ] Use a dependency update service such as Dependabot or Renovate if supported
+      by the chosen repository host; include security/advisory review.
+
+### Feature and Device Validation
+
+- [ ] Add a device/image at the app's minimum supported API before release.
+- [ ] Test the latest stable Android version, small screens, large text, rotation,
+      and a tablet/foldable size if those form factors are supported.
+- [ ] Check permission denial, offline behavior, background/resume behavior, and
+      notifications where applicable.
+- [ ] Add `integration_test` and a critical end-to-end test, then run it on an
+      Android device using section 6's guidance.
+- [ ] Measure performance on real hardware in profile mode, not debug mode.
+- [ ] Track coverage for important logic; generating a report does not enforce
+      a threshold. Set an explicit threshold later if useful.
+- [ ] Add targeted golden/screenshot tests for stable visual requirements, using
+      a consistent OS, fonts, and rendering environment.
+- [ ] Test accessibility with TalkBack and large text; check contrast and touch targets.
+
+### App Configuration and Security
+
+- [ ] Separate development and production API endpoints. Start with documented
+      `--dart-define` values; add Android flavors when separate app IDs, service
+      configurations, or side-by-side installations are needed.
+- [ ] Use HTTPS and request only necessary Android permissions. If network access
+      is needed, verify the release manifest includes the Internet permission.
+- [ ] For local APIs, remember that emulator `localhost` refers to the emulator;
+      the standard Android emulator reaches the host through `10.0.2.2`. Keep any
+      development cleartext exceptions out of production configuration.
+- [ ] Keep logs free of credentials and sensitive personal data.
+
+### CI and Release Validation
+
+- [ ] Implement and verify section 8's pull request gate against the app, then
+      require its checks before merging.
+- [ ] Run an integration smoke test on important pull requests or a scheduled
+      job using section 8's emulator and untrusted-contribution safeguards.
+- [ ] Configure release signing explicitly; a template build that uses debug
+      signing is not ready for Play distribution.
+- [ ] Set a user-facing version and monotonically increasing Android build number.
+- [ ] Run tests, then build with `flutter build appbundle --release` using the
+      intended production configuration.
+- [ ] Retain the AAB and, when applicable, obfuscation symbols/mapping files with
+      the release's source revision and toolchain version.
+- [ ] Test through Google Play's internal track on real hardware before promotion.
+      An AAB cannot be installed directly like an APK.
