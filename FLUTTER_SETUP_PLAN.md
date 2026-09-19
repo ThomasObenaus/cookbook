@@ -14,8 +14,9 @@ toolchain check. Flutter, Android, and Java environment settings are persistent
 in Bash. The user confirms shell setup and VS Code restart are complete.
 The user confirms clicking Finish in Android Studio's first-launch wizard.
 Section 2 editor configuration is ready; runtime verification awaits a Flutter
-project and Android device. Virtual device creation, project scaffolding, and CI
-remain outside the current step.
+project. Section 3 emulator setup is verified: Pixel_8_API_36 boots successfully
+and is detected by ADB and Flutter. App launch and physical-device checks remain
+pending. Project scaffolding and CI remain outside the current step.
 
 Host checks confirmed Ubuntu 24.04.5 LTS on x86_64, 31 GiB RAM, and 236 GiB free
 disk space before installation. The Android Emulator confirms KVM is installed
@@ -72,7 +73,7 @@ created or built yet, so project-level compatibility remains to be tested.
 Verified: Flutter/Dart versions, Android toolchain in `flutter doctor -v`, all
 Android SDK licenses accepted, `adb version`, installed SDK packages, and
 `emulator -accel-check`. Remaining Doctor errors concern unused Linux desktop
-dependencies, not Android. No AVD or Android system image has been created yet.
+dependencies, not Android. The API 36 system image and AVD are recorded in section 3.
 
 The user confirms shell setup and VS Code restart are complete. Flutter, Android,
 and Java settings were added to `~/.bashrc` by the assistant; zsh setup was left
@@ -175,7 +176,8 @@ deeply on native Android code.
 ### Recommended Emulator
 
 Use Google's official **Android Emulator**, installed through SDK Manager, with
-an **Android Virtual Device (AVD)** created in Android Studio's Device Manager.
+an **Android Virtual Device (AVD)** created in Android Studio's Device Manager
+or with the SDK's `avdmanager` CLI.
 An AVD is the device configuration and OS image, not a separate emulator product.
 Genymotion and consumer Android emulators are unnecessary for this setup.
 
@@ -190,12 +192,12 @@ Initial AVD recommendation:
 | Graphics        | Automatic acceleration initially                                                                        |
 | Memory          | Start with profile defaults and adjust to host capacity                                                 |
 
-- [ ] Enable CPU virtualization in BIOS/UEFI where necessary.
-- [ ] Configure Linux KVM and user access to `/dev/kvm` using the distribution's
+- [x] Confirm CPU virtualization is enabled; no BIOS/UEFI change was needed.
+- [x] Confirm Linux KVM and user access to `/dev/kvm` using the distribution's
       instructions. Group changes may require signing out and back in. Do not run
       the emulator as root or make `/dev/kvm` world-writable.
-- [ ] Verify acceleration with `emulator -accel-check` after PATH setup.
-- [ ] Create and boot the AVD, then confirm Flutter detects it.
+- [x] Verify acceleration with `emulator -accel-check` after PATH setup.
+- [x] Create and boot the AVD, then confirm Flutter detects it.
 - [ ] Select the device from VS Code's status bar and launch the app with F5.
 
 ```bash
@@ -209,6 +211,28 @@ A host with 16 GB RAM and ample SSD space is a practical starting point, not a
 guaranteed minimum; 32 GB is more comfortable for several tools/devices. Reserve
 tens of GB for SDKs, images, and build caches. If hardware acceleration is
 unavailable or memory is limited, use a physical phone instead.
+
+### Emulator Setup Status
+
+Created `Pixel_8_API_36` with `avdmanager`, using the Pixel 8 hardware profile and
+`system-images;android-36;google_apis;x86_64` (Android 16, API 36). Graphics are
+automatic; the running emulator selected the NVIDIA GeForce GTX 1650. KVM is
+usable without elevated privileges.
+
+Verified: `flutter emulators` lists the AVD, ADB reports `emulator-5554` as
+`device`, `sys.boot_completed` returns `1`, and `flutter devices` lists it as an
+Android API 36 emulator. The device serial may change on subsequent launches.
+AVD creation reported a missing image `devices.xml`; this did not prevent
+creation, boot, or device discovery.
+
+The emulator was left running. After closing it, launch it again with:
+
+```bash
+flutter emulators --launch Pixel_8_API_36
+```
+
+VS Code device selection and F5 remain pending until the Flutter app exists.
+Physical-phone setup and the broader device coverage below are not yet verified.
 
 ### Device Coverage
 
