@@ -9,39 +9,83 @@ Use Android Studio for Android SDK and virtual-device management, and for native
 Android debugging when needed. It does not need to stay open during normal Flutter
 development.
 
-This document is a plan only. No SDKs, extensions, emulator images, project
-scaffolding, or CI workflows have been installed or created.
+Section 1 host and SDK setup is complete and Flutter Doctor passes the Android
+toolchain check. Flutter, Android, and Java environment settings are persistent
+in Bash. The user confirms shell setup and VS Code restart are complete.
+The user confirms clicking Finish in Android Studio's first-launch wizard.
+Extensions, virtual
+device creation, project scaffolding, and CI remain outside the current step.
 
-Initial observation: `flutter`, `dart`, `java`, `adb`, and `sdkmanager` were not
-found on the current terminal's PATH. They could still exist elsewhere. Linux
-distribution, CPU architecture, available memory, virtualization support, and
-installed VS Code extensions still need to be checked before installation.
+Host checks confirmed Ubuntu 24.04.5 LTS on x86_64, 31 GiB RAM, and 236 GiB free
+disk space before installation. The Android Emulator confirms KVM is installed
+and usable. No previous Flutter or Android installation was found in the common
+locations checked. All SDK downloads passed their published SHA-256 checks.
 
 ## 1. Host and SDK Setup
 
-- [ ] Confirm the Linux distribution, CPU architecture, free disk space, and RAM.
-- [ ] Check current Flutter and Android installation locations before adding new ones.
-- [ ] Install Git and the host dependencies listed in Flutter's Linux installation
+- [x] Confirm the Linux distribution, CPU architecture, free disk space, and RAM.
+- [x] Check current Flutter and Android installation locations before adding new ones.
+- [x] Install Git and the host dependencies listed in Flutter's Linux installation
       guide, including download/archive tools. Use distribution-specific packages.
-- [ ] Install the current stable Flutter SDK in a user-writable location, such as
+- [x] Install the current stable Flutter SDK in a user-writable location, such as
       `~/development/flutter`. Do not run Flutter as root.
-- [ ] Add the Flutter SDK's `bin` directory to the shell PATH and restart VS Code
-      so its terminal and extensions inherit the updated environment.
-- [ ] Use the Dart SDK bundled with Flutter, not a separately versioned Dart install.
-- [ ] Install stable Android Studio and complete its setup wizard.
-- [ ] Start with Android Studio's bundled JDK. Confirm the actual Java location
+- [x] Add the Flutter SDK's `bin` directory to Bash PATH in `~/.bashrc`.
+- [x] Restart VS Code and verify tools in a new terminal so its terminal and
+      extensions inherit the updated environment.
+- [x] Use the Dart SDK bundled with Flutter, not a separately versioned Dart install.
+- [x] Install stable Android Studio in `~/development/android-studio`.
+- [x] Complete Android Studio's first-launch wizard, reusing `~/Android/Sdk`
+      (user confirmed clicking Finish).
+- [x] Start with Android Studio's bundled JDK. Confirm the actual Java location
       with `flutter doctor -v`; ensure it is compatible with the project's Android
       Gradle Plugin and Gradle wrapper. Do not independently upgrade these components.
-- [ ] In SDK Manager, install Android SDK Platform-Tools, Command-line Tools,
+- [x] In SDK Manager, install Android SDK Platform-Tools, Command-line Tools,
       Build-Tools, Android Emulator, and the SDK platform required by the selected
       Flutter version/project. Install compatible NDK and CMake versions as required
       by Flutter's setup guidance and native plugins.
-- [ ] Record the Android SDK location, typically `~/Android/Sdk`. Configure
-      `ANDROID_HOME` and PATH entries for `platform-tools`, `emulator`, and
-      `cmdline-tools/latest/bin` using the actual installed paths. Use
-      `flutter config --android-sdk /actual/sdk/path` if auto-detection fails.
-- [ ] Review Android SDK licenses interactively with
+- [x] Record `~/Android/Sdk` and configure Flutter to use this Android SDK.
+- [x] Persist `ANDROID_HOME`, the bundled `JAVA_HOME`, and PATH entries for Java,
+      `platform-tools`, `emulator`, and `cmdline-tools/latest/bin` in `~/.bashrc`.
+      Verified after sourcing the configuration; existing terminals need reloading.
+- [x] Review Android SDK licenses interactively with
       `flutter doctor --android-licenses`.
+
+### Installed Versions and Validation
+
+| Component                 | Installed version / location                                 |
+| ------------------------- | ------------------------------------------------------------ |
+| Flutter                   | 3.47.5 stable, `~/development/flutter`                       |
+| Dart                      | 3.13.4, bundled with Flutter                                 |
+| Android Studio            | Quail 4 Patch 1 (2026.1.4.8), `~/development/android-studio` |
+| Java                      | Bundled OpenJDK 25.0.3, `~/development/android-studio/jbr`   |
+| Android SDK               | `~/Android/Sdk`                                              |
+| Command-line tools        | 22.0, `cmdline-tools/latest`                                 |
+| Platform / Build-Tools    | Android API 36 (revision 2) / 36.0.0                         |
+| Platform-Tools / Emulator | 37.0.1 / 37.1.11                                             |
+| NDK / CMake               | 28.2.13676358 / 3.22.1                                       |
+
+Flutter is configured with explicit Android SDK, Android Studio, and JDK paths.
+The installed Flutter template uses Gradle 9.3.1 and AGP 9.1.0. No app has been
+created or built yet, so project-level compatibility remains to be tested.
+
+Verified: Flutter/Dart versions, Android toolchain in `flutter doctor -v`, all
+Android SDK licenses accepted, `adb version`, installed SDK packages, and
+`emulator -accel-check`. Remaining Doctor errors concern unused Linux desktop
+dependencies, not Android. No AVD or Android system image has been created yet.
+
+The user confirms shell setup and VS Code restart are complete. Flutter, Android,
+and Java settings were added to `~/.bashrc` by the assistant; zsh setup was left
+to the user. Bash syntax, tool resolution, Java, ADB, and KVM acceleration were
+verified after sourcing the configuration. The equivalent settings are:
+
+```bash
+export JAVA_HOME="$HOME/development/android-studio/jbr"
+export ANDROID_HOME="$HOME/Android/Sdk"
+export PATH="$HOME/development/flutter/bin:$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+```
+
+Launch the installed IDE with `~/development/android-studio/bin/studio` when
+needed. SDK downloads remain in `~/development/.downloads`.
 
 Verification commands after installation:
 
