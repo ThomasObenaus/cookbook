@@ -36,3 +36,8 @@ versions rather than upgrading all dependencies. Override the emulator with
 To run Cookbook on a physical Android phone, follow the
 [phone connection guide](docs/connect-to-mobile.md) for USB debugging setup,
 device selection, and installing and launching the debug app with VS Code's F5.
+
+For Google Play registration, private upload-key storage, signing, and versioning,
+see the [release setup guide](docs/release-setup.md). Release builds require local
+signing credentials; debug builds and CI do not. Play setup and the first signed
+release build are not yet verified.

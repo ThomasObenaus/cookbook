@@ -25,7 +25,9 @@ Section 4's Android-only Flutter starter now exists at the repository
 root. The GitHub Actions CI workflow is implemented and locally validated;
 the user confirms a successful hosted run and working required-check enforcement
 for `Android Checks`.
-Release setup is deferred.
+Release setup is in progress: external upload-key configuration replaces debug
+signing for release builds. The upload key was created with private permissions.
+Play registration, signing properties, backup, and a signed build remain pending.
 
 Host checks confirmed Ubuntu 24.04.5 LTS on x86_64, 31 GiB RAM, and 236 GiB free
 disk space before installation. The Android Emulator confirms KVM is installed
@@ -449,8 +451,17 @@ validation and release workflows.
 
 ## 9. Release Pipeline
 
-- [ ] Register the required Google Play developer account and review current
-      verification, target API, testing, privacy, and Data safety requirements.
+See [the release setup guide](docs/release-setup.md) for account checks, upload-key
+generation, protected local storage, and versioning. The user confirmed they do
+not have a Google Play developer account and will create one later; this step
+has not been completed. A new JKS upload key was generated interactively outside
+the repository; passwords were entered directly in the terminal. Directory mode
+`700` and keystore mode `600` were verified. No account, payment, Play enrollment,
+or key backup has been completed by the assistant.
+
+- [ ] Create a Google Play developer account later (deferred; not completed),
+      then review current verification, target API, testing, privacy, and Data
+      safety requirements.
 - [ ] Configure Play App Signing and a dedicated upload key. Back up the upload
       keystore securely and restrict access.
 - [ ] Keep the keystore and signing properties outside version control. Inject
@@ -607,9 +618,20 @@ sections retain reference guidance and tasks that can be done before scaffolding
       `Android Integration` job, including the test-output and Logcat artifact.
 - [ ] Require `Android Integration` before merging after its first successful
       hosted run; the existing `Android Checks` rule does not enforce this job.
-- [ ] Configure release signing explicitly; a template build that uses debug
-      signing is not ready for Play distribution.
-- [ ] Set a user-facing version and monotonically increasing Android build number.
+- [x] Configure a dedicated release signing configuration, reading private
+      properties from `~/.config/cookbook/key.properties` or the path in
+      `COOKBOOK_SIGNING_PROPERTIES`. Missing credentials block release preparation;
+      debug APK compilation still passes without them. Both checks passed locally.
+- [x] Create the upload keystore outside the repository at
+      `~/.config/cookbook/upload-keystore.jks`, with alias `upload`, RSA 2048, and
+      verified private permissions (directory `700`, keystore `600`).
+- [ ] Configure private signing properties and verify encrypted backup and
+      recovery. Actual signed output is unverified.
+- [x] Verify version wiring: `pubspec.yaml` currently sets `1.0.0+1`, mapped to
+      Android version name and code. The release guide documents increasing build
+      numbers across all tracks; no version was changed during setup.
+- [ ] Confirm the initial release version and an unused build number against
+      Play Console before uploading.
 - [ ] Run tests, then build with `flutter build appbundle --release` using the
       intended production configuration.
 - [ ] Retain the AAB and, when applicable, obfuscation symbols/mapping files with
