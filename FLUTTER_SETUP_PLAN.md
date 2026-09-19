@@ -17,7 +17,10 @@ Section 2 editor configuration is ready; the user confirms F5 launch, breakpoint
 variable inspection, and hot reload work. The user also confirms the SDK version,
 completion, diagnostics, Testing UI, and Inspector widget selection work.
 Section 3 emulator setup is verified: Pixel_8_API_36 boots successfully
-and is detected by ADB and Flutter. Physical-device checks remain pending.
+and is detected by ADB and Flutter. Physical-phone setup is also verified:
+Armor 10 5G on Android 10 (API 29) is detected and authorized, and the user
+confirms F5 launch and counter interaction work. Performance and release checks
+remain pending.
 Section 4's Android-only Flutter starter now exists at the repository
 root. The GitHub Actions CI workflow is implemented and locally validated;
 the user confirms a successful hosted run and working required-check enforcement
@@ -235,13 +238,18 @@ flutter emulators --launch Pixel_8_API_36
 
 The user confirms selecting the emulator and launching the starter with F5 works.
 App-dependent device coverage is collected in section 11.
-Physical-phone setup below is not yet verified.
+Physical-phone setup is verified as recorded below.
 
 ### Device Coverage
 
-- [ ] Keep at least one real Android phone for release and performance testing.
-      Enable Developer options and USB debugging, authorize this computer, and
-      configure Linux USB/udev permissions if required.
+- [x] Set up a real Android phone for development and later release/performance
+      testing: enable USB debugging and authorize this computer.
+      ADB reports the Armor 10 5G as `device`; Flutter recognizes it as an
+      Android ARM64 target running Android 10 (API 29). No additional Linux
+      USB/udev permission changes were needed.
+- [x] Launch Cookbook on the phone with F5 and verify counter interaction
+      (user confirmed). This verifies debug deployment, not release readiness
+      or performance; those checks remain pending in section 11.
 
 The emulator API, compile SDK, target SDK, and minimum SDK are different settings.
 Use Flutter's compatible build defaults initially, then choose minimum support
