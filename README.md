@@ -34,8 +34,8 @@ versions rather than upgrading all dependencies. Override the emulator with
 ## Continuous Integration
 
 [Flutter CI](.github/workflows/flutter-ci.yml) runs on pull requests, pushes to
-any branch, and manual dispatch. A branch with an open pull request can trigger
-both a push run and a pull-request run.
+`main`, and manual dispatch. Feature-branch pushes use the pull-request run
+without a duplicate push run; merging into `main` triggers a post-merge check.
 
 The `Android Checks` job uses Ubuntu 24.04, Flutter 3.47.5, and Temurin JDK
 25.0.3. It resolves dependencies with `--enforce-lockfile`, checks formatting

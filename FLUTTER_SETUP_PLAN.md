@@ -397,9 +397,9 @@ validation and release workflows.
 
 ### CI Setup Status
 
-- Added `Flutter CI` with the `Android Checks` job for pull requests, all branch
-  pushes, and manual dispatch on Ubuntu 24.04. Push and pull-request events can
-  both run for a branch with an open pull request.
+- Added `Flutter CI` with the `Android Checks` job for pull requests, pushes to
+  `main`, and manual dispatch on Ubuntu 24.04. Restricting push events to `main`
+  avoids duplicate runs for feature-branch PR updates and retains post-merge CI.
 - Pinned actions to immutable revisions and Flutter to 3.47.5; selected Temurin
   JDK 25.0.3 and explicit Android platform/build-tools/NDK/CMake versions matching
   the local setup. Flutter is configured to use that JDK and the runner's SDK.
