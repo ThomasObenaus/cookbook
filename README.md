@@ -46,8 +46,24 @@ Coverage and successful debug APKs are available from the workflow run's
 Artifacts section for seven days. Coverage is uploaded when available even if
 a later check fails. No release signing keys or publishing credentials are used.
 
-After committing and pushing the workflow, verify a successful run in GitHub's
-Actions tab. Then configure the target branch's ruleset or branch protection to
-require the `Android Checks` status check before merging. Adding the workflow
-alone does not enforce merge protection; neither a hosted run nor branch
-protection has been verified yet.
+The user has verified a successful hosted run and configured `Android Checks`
+as a required check before merging. Adding the workflow alone does not enforce
+merge protection; that is configured separately in GitHub's repository settings.
+
+## Dependency Updates
+
+[Dependabot configuration](.github/dependabot.yml) checks Pub packages and GitHub
+Actions weekly on Mondays, with up to five open version-update PRs per ecosystem.
+Merge this configuration into the repository's default branch to activate it,
+then inspect the update jobs in GitHub's Dependency graph / Dependabot view.
+The first hosted Dependabot check has not yet been verified.
+
+Review release notes, compatibility, licenses, and security advisories before
+merging update PRs. Require `Android Checks` to pass; no auto-merge is configured.
+Keep GitHub Actions pinned to commit hashes when reviewing action updates.
+Flutter, Java, and Android SDK version upgrades remain manual coordinated changes.
+
+Scheduled version updates do not replace security review. Check the repository's
+security settings for Dependabot alerts and security updates where supported;
+their availability and advisory coverage vary by ecosystem. These settings have
+not been changed or verified by this setup.

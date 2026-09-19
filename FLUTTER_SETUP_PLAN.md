@@ -20,7 +20,9 @@ Section 3 emulator setup is verified: Pixel_8_API_36 boots successfully
 and is detected by ADB and Flutter. Physical-device checks remain pending.
 Section 4's Android-only Flutter starter now exists at the repository
 root. The GitHub Actions CI workflow is implemented and locally validated;
-its first hosted run and merge protection remain pending. Release setup is deferred.
+the user confirms a successful hosted run and working required-check enforcement
+for `Android Checks`.
+Release setup is deferred.
 
 Host checks confirmed Ubuntu 24.04.5 LTS on x86_64, 31 GiB RAM, and 236 GiB free
 disk space before installation. The Android Emulator confirms KVM is installed
@@ -410,10 +412,16 @@ validation and release workflows.
   after a later failure. No coverage threshold is enforced.
 - YAML checks, actionlint, pinned action input checks, and the local dependency,
   formatting, analysis, and coverage gates passed. The debug build previously
-  passed locally, but the GitHub-hosted toolchain and build are not yet verified.
-- No commit, push, or remote repository settings changes were made. Push the
-  workflow, inspect its first run, then require `Android Checks` on the target
-  branch using a ruleset or branch protection. Emulator integration CI is deferred.
+  passed locally. The user confirms the entire GitHub-hosted `Android Checks`
+  job passed, including the debug APK build and artifact uploads.
+- The first hosted SDK setup failed because the pinned Android action requested
+  the obsolete `tools` package by default. Setting `packages: platform-tools`
+  resolved that failure; the subsequent full job passed (user confirmed).
+- No commit, push, or remote repository settings changes were made by the
+  assistant. The user configured the required `Android Checks` status check
+  through GitHub's ruleset or branch protection settings and confirms it works.
+  Remote enforcement was user-verified, not independently inspected by the
+  assistant. Emulator integration CI is deferred.
 
 ## 9. Release Pipeline
 
@@ -502,8 +510,16 @@ sections retain reference guidance and tasks that can be done before scaffolding
       project-level toolchain compatibility.
 - [ ] Review `flutter pub outdated` regularly; upgrade in a separate change and
       rerun tests. An outdated-package report is not a security vulnerability scan.
-- [ ] Use a dependency update service such as Dependabot or Renovate if supported
-      by the chosen repository host; include security/advisory review.
+- [x] Add `.github/dependabot.yml` for weekly Monday Pub and GitHub Actions
+      version-update checks, with five open PRs per ecosystem and no auto-merge.
+      Local YAML, schedule, and project-location checks passed.
+- [ ] Merge the Dependabot configuration into the default branch and verify
+      successful hosted update jobs; absence of a PR can mean no update is needed.
+- [ ] Review dependency update PRs for compatibility, licenses, and security
+      advisories; require passing CI. Keep Flutter/Java/Android upgrades coordinated
+      manually and action revisions pinned to commit hashes.
+- [ ] Review GitHub Dependabot alert/security-update settings where supported;
+      scheduled version updates alone do not establish vulnerability coverage.
 
 ### Feature and Device Validation
 
@@ -537,8 +553,10 @@ sections retain reference guidance and tasks that can be done before scaffolding
 
 - [x] Implement section 8's pull request gate and validate its workflow and local
       quality commands.
-- [ ] Push the workflow and verify a successful GitHub-hosted `Android Checks` run.
-- [ ] Require `Android Checks` before merging via a branch ruleset or protection.
+- [x] Push the workflow and verify a successful GitHub-hosted `Android Checks` run
+      (user confirmed, including APK build and artifact uploads).
+- [x] Require `Android Checks` before merging via a branch ruleset or protection
+      (configured and verified by the user).
 - [ ] Run an integration smoke test on important pull requests or a scheduled
       job using section 8's emulator and untrusted-contribution safeguards.
 - [ ] Configure release signing explicitly; a template build that uses debug
