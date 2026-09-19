@@ -17,12 +17,21 @@ Section 2 editor configuration is ready; the user confirms F5 launch, breakpoint
 variable inspection, and hot reload work. The user also confirms the SDK version,
 completion, diagnostics, Testing UI, and Inspector widget selection work.
 Section 3 emulator setup is verified: Pixel_8_API_36 boots successfully
-and is detected by ADB and Flutter. Physical-device checks remain pending.
+and is detected by ADB and Flutter. Physical-phone setup is also verified:
+Armor 10 5G on Android 10 (API 29) is detected and authorized, and the user
+confirms F5 launch and counter interaction work. Performance and release checks
+remain pending.
 Section 4's Android-only Flutter starter now exists at the repository
 root. The GitHub Actions CI workflow is implemented and locally validated;
 the user confirms a successful hosted run and working required-check enforcement
 for `Android Checks`.
-Release setup is deferred.
+Release setup is in progress: external upload-key configuration replaces debug
+signing for release builds. The upload key was created with private permissions.
+Private signing properties are configured, and the starter's signed release AAB
+was built and its upload certificate verified locally. Signing files were backed
+up to the user's SynologyDrive destination and local recovery was verified.
+Remote encrypted-backup verification, Play registration, production
+configuration, and Play testing remain pending.
 
 Host checks confirmed Ubuntu 24.04.5 LTS on x86_64, 31 GiB RAM, and 236 GiB free
 disk space before installation. The Android Emulator confirms KVM is installed
@@ -168,7 +177,11 @@ inspection, and hot reload with state preserved. VS Code's test integration now
 discovers and runs the widget test, and the live Flutter Inspector widget tree
 was retrieved through tooling. The user subsequently confirmed manual Testing UI
 and Inspector widget selection, completion, diagnostics, and Flutter SDK 3.47.5.
-DevTools memory, network, and performance checks remain pending.
+DevTools Performance frame capture and inspection work on the starter app
+(user confirmed after the physical-phone profile-mode walkthrough).
+DevTools Memory monitoring and garbage-collection controls also work (user
+confirmed). Network inspection remains pending; feature-level performance and
+memory-leak validation are still required as the app develops.
 
 Do not use ESLint or Prettier to lint/format Dart. Kotlin and Java extensions are
 not required for ordinary Flutter development; use Android Studio when working
@@ -235,13 +248,18 @@ flutter emulators --launch Pixel_8_API_36
 
 The user confirms selecting the emulator and launching the starter with F5 works.
 App-dependent device coverage is collected in section 11.
-Physical-phone setup below is not yet verified.
+Physical-phone setup is verified as recorded below.
 
 ### Device Coverage
 
-- [ ] Keep at least one real Android phone for release and performance testing.
-      Enable Developer options and USB debugging, authorize this computer, and
-      configure Linux USB/udev permissions if required.
+- [x] Set up a real Android phone for development and later release/performance
+      testing: enable USB debugging and authorize this computer.
+      ADB reports the Armor 10 5G as `device`; Flutter recognizes it as an
+      Android ARM64 target running Android 10 (API 29). No additional Linux
+      USB/udev permission changes were needed.
+- [x] Launch Cookbook on the phone with F5 and verify counter interaction
+      (user confirmed). This verifies debug deployment, not release readiness
+      or performance; those checks remain pending in section 11.
 
 The emulator API, compile SDK, target SDK, and minimum SDK are different settings.
 Use Flutter's compatible build defaults initially, then choose minimum support
@@ -338,12 +356,12 @@ required for the Flutter build pipeline.
 | Manual/device | Real phone and emulator            | Permissions, accessibility, lifecycle, release behavior |
 
 Unit and widget tests run without an Android emulator. Integration tests require
-a configured target device. Add `integration_test` as a Flutter SDK development
-dependency and create the tests before running this example; replace `DEVICE_ID`
-with an ID from `flutter devices`:
+a configured target device. The Flutter SDK `integration_test` development
+dependency and starter smoke test are now present. Replace `DEVICE_ID` with
+an ID from `flutter devices`:
 
 ```bash
-flutter test integration_test -d DEVICE_ID
+flutter test integration_test/app_test.dart -d DEVICE_ID
 ```
 
 Use fakes/mocks to isolate ordinary tests from production services. Standard
@@ -397,9 +415,9 @@ validation and release workflows.
 
 ### CI Setup Status
 
-- Added `Flutter CI` with the `Android Checks` job for pull requests, all branch
-  pushes, and manual dispatch on Ubuntu 24.04. Push and pull-request events can
-  both run for a branch with an open pull request.
+- Added `Flutter CI` with the `Android Checks` job for pull requests, pushes to
+  `main`, and manual dispatch on Ubuntu 24.04. Restricting push events to `main`
+  avoids duplicate runs for feature-branch PR updates and retains post-merge CI.
 - Pinned actions to immutable revisions and Flutter to 3.47.5; selected Temurin
   JDK 25.0.3 and explicit Android platform/build-tools/NDK/CMake versions matching
   the local setup. Flutter is configured to use that JDK and the runner's SDK.
@@ -421,14 +439,49 @@ validation and release workflows.
   assistant. The user configured the required `Android Checks` status check
   through GitHub's ruleset or branch protection settings and confirms it works.
   Remote enforcement was user-verified, not independently inspected by the
-  assistant. Emulator integration CI is deferred.
+  assistant.
+- Added the `Android Integration` job after `Android Checks`, on the existing
+  PR, `main` push, and manual triggers. It uses Ubuntu 24.04, runner-user KVM
+  access, and an API 36 Google APIs x86_64 emulator with the default AVD hardware
+  configuration. The local Pixel 8 AVD is unchanged. The emulator action
+  is commit-pinned; SDK Manager image/emulator revisions are not frozen.
+- The emulator action waits for boot and shuts down afterward. The test script
+  runs `make integration-test` with a fifteen-minute timeout, preserves failing
+  exit codes through log capture, and collects Logcat before shutdown. Available
+  logs are retained for seven days, including on test failure. Read-only
+  permissions and the untrusted-PR safeguards remain in place.
+- Actionlint, YAML and shell checks, scripted success/failure propagation tests,
+  and the real test script on the local emulator passed. The user confirms the
+  hosted `Android Integration` job now passes after the AVD profile fix.
+  The user also confirms the log artifact contains test output and Logcat, and
+  `Android Integration` is required before merging. These remote checks were
+  user-verified, not independently inspected by the assistant.
+- Hosted run `35467353206` failed while creating the AVD because the runner's
+  `avdmanager` did not recognize `pixel_8`. Removed the optional hardware profile;
+  the pinned action now omits `--device`, preserving API 36, Google APIs, and
+  x86_64. Local workflow checks passed; the user subsequently confirmed a
+  successful hosted run. The assistant has not independently inspected that run.
+  The SDK XML-version warning is separate; the later ADB connection refusal
+  occurred during cleanup because no emulator had started.
 
 ## 9. Release Pipeline
 
-- [ ] Register the required Google Play developer account and review current
-      verification, target API, testing, privacy, and Data safety requirements.
-- [ ] Configure Play App Signing and a dedicated upload key. Back up the upload
-      keystore securely and restrict access.
+See [the release setup guide](docs/release-setup.md) for account checks, upload-key
+generation, protected local storage, and versioning. The user confirmed they do
+not have a Google Play developer account and will create one later; this step
+has not been completed. A new JKS upload key was generated interactively outside
+the repository; passwords were entered directly in the terminal. Directory mode
+`700` and keystore mode `600` were verified. Both signing files were backed up to
+the user's SynologyDrive destination and local recovery was verified (section 11).
+Encryption and separate-storage backup are provided by the user's setup, not
+independently verified by the assistant. No account, payment, or Play enrollment
+has been completed by the assistant.
+
+- [ ] Create a Google Play developer account later (deferred; not completed),
+      then review current verification, target API, testing, privacy, and Data
+      safety requirements.
+- [ ] Configure Play App Signing using the dedicated upload key already created;
+      local backup and recovery verification are recorded in section 11.
 - [ ] Keep the keystore and signing properties outside version control. Inject
       them only into approved release jobs and clean temporary copies afterward.
 - [ ] Require approval before production promotion. Use staged rollout and plan
@@ -493,7 +546,13 @@ sections retain reference guidance and tasks that can be done before scaffolding
       widget tree; verified Cookbook's Scaffold, AppBar, counter, and button.
 - [x] Open Flutter Inspector and select a widget to inspect its place in the
       widget tree (user verified).
-- [ ] Use DevTools for memory/network/performance checks.
+- [x] Verify DevTools Performance frame capture, pause/resume, and frame
+      inspection on the starter app (user confirmed after the physical-phone
+      profile-mode walkthrough). This verifies tooling, not release performance.
+- [x] Verify DevTools Memory monitoring and garbage-collection controls
+      (user confirmed). This verifies tooling, not the absence of memory leaks.
+- [ ] Verify DevTools Network inspection when the app makes network requests;
+      the counter starter has no application network traffic to exercise.
 
 ### Project Baseline and Quality Checks
 
@@ -513,13 +572,22 @@ sections retain reference guidance and tasks that can be done before scaffolding
 - [x] Add `.github/dependabot.yml` for weekly Monday Pub and GitHub Actions
       version-update checks, with five open PRs per ecosystem and no auto-merge.
       Local YAML, schedule, and project-location checks passed.
-- [ ] Merge the Dependabot configuration into the default branch and verify
-      successful hosted update jobs; absence of a PR can mean no update is needed.
+- [x] Verify hosted GitHub Actions version updates are active: the user shared
+      a Dependabot PR with the `github_actions` label.
+- [x] Verify the hosted Pub update job completes successfully: the user's
+      screenshot shows successful `pubspec.yaml` version-update jobs 1583254806
+      and 1583254801, both reporting "No PRs affected". This verifies hosted
+      execution, not the absence of vulnerabilities or all possible upgrades.
 - [ ] Review dependency update PRs for compatibility, licenses, and security
       advisories; require passing CI. Keep Flutter/Java/Android upgrades coordinated
       manually and action revisions pinned to commit hashes.
-- [ ] Review GitHub Dependabot alert/security-update settings where supported;
-      scheduled version updates alone do not establish vulnerability coverage.
+- [x] Review GitHub Dependabot alert/security-update settings: the user confirms
+      enabling Dependency graph, Dependabot alerts, and Dependabot security
+      updates. Remote settings were user-verified, not independently inspected
+      by the assistant. Security updates create PRs; they do not auto-merge them.
+      Coverage depends on ecosystem and advisory support; GitHub's documented
+      Actions alert support excludes commit-SHA references. Keep action SHA pins
+      and continue version updates and advisory review.
 
 ### Feature and Device Validation
 
@@ -528,8 +596,14 @@ sections retain reference guidance and tasks that can be done before scaffolding
       and a tablet/foldable size if those form factors are supported.
 - [ ] Check permission denial, offline behavior, background/resume behavior, and
       notifications where applicable.
-- [ ] Add `integration_test` and a critical end-to-end test, then run it on an
-      Android device using section 6's guidance.
+- [x] Add Flutter SDK `integration_test` and run the starter Android smoke test.
+      `integration_test/app_test.dart` launches the app through `main()`, checks
+      the Cookbook screen, and verifies counter changes from 0 to 1 to 2.
+      Passed on the local Android emulator (`emulator-5554`) and in hosted
+      emulator CI (user confirmed). Physical-phone execution of this automated
+      test has not been verified.
+- [ ] Extend integration coverage to a critical feature workflow once real app
+      features exist; the counter test verifies only the starter setup.
 - [ ] Measure performance on real hardware in profile mode, not debug mode.
 - [ ] Track coverage for important logic; generating a report does not enforce
       a threshold. Set an explicit threshold later if useful.
@@ -557,13 +631,47 @@ sections retain reference guidance and tasks that can be done before scaffolding
       (user confirmed, including APK build and artifact uploads).
 - [x] Require `Android Checks` before merging via a branch ruleset or protection
       (configured and verified by the user).
-- [ ] Run an integration smoke test on important pull requests or a scheduled
-      job using section 8's emulator and untrusted-contribution safeguards.
-- [ ] Configure release signing explicitly; a template build that uses debug
-      signing is not ready for Play distribution.
-- [ ] Set a user-facing version and monotonically increasing Android build number.
-- [ ] Run tests, then build with `flutter build appbundle --release` using the
-      intended production configuration.
+- [x] Implement emulator integration CI using section 8's safeguards and validate
+      its workflow and test script locally.
+- [x] Push the AVD profile fix and verify a successful hosted
+      `Android Integration` job (user confirmed).
+- [x] Verify the hosted `android-integration-logs` artifact contains the
+      test-output and Logcat files (user confirmed).
+- [x] Require `Android Integration` before merging after its first successful
+      hosted run (configured and verified by the user).
+- [x] Configure a dedicated release signing configuration, reading private
+      properties from `~/.config/cookbook/key.properties` or the path in
+      `COOKBOOK_SIGNING_PROPERTIES`. Missing credentials block release preparation;
+      debug APK compilation still passes without them. Both checks passed locally.
+- [x] Create the upload keystore outside the repository at
+      `~/.config/cookbook/upload-keystore.jks`, with alias `upload`, RSA 2048, and
+      verified private permissions (directory `700`, keystore `600`).
+- [x] Configure private signing properties outside the repository; verified mode
+      `600` and successful release signing without displaying credentials.
+- [x] Back up `upload-keystore.jks` and `key.properties` to
+      `/XYZ/Documents/Arbeit/google.play.backup/cookbook/`
+      in `backup-2026-09-19T21-09-08-609Z-AM6KMx`, with directory mode `700` and
+      file modes `600`. Restored both files into a private temporary memory-backed
+      directory and verified byte-for-byte equality; temporary copies were removed
+      and working files were unchanged.
+- [ ] Confirm SynologyDrive synchronization and the encrypted separate-storage
+      backup completed, then test recovery from that storage. The user states
+      encryption and backup are automatic; only local-copy recovery was verified.
+      No additional file-level encryption was applied by the assistant.
+- [x] Verify version wiring: `pubspec.yaml` currently sets `1.0.0+1`, mapped to
+      Android version name and code. The release guide documents increasing build
+      numbers across all tracks; no version was changed during setup.
+- [ ] Confirm the initial release version and an unused build number against
+      Play Console before uploading.
+- [x] Run the starter widget test and strict analysis, then build with
+      `flutter build appbundle --release` (44.2 MB). `jarsigner` verified the
+      signature; a Java verifier checked that all 80 payload entries are signed
+      by the configured upload certificate. Credentials were not displayed.
+      The JDK reported self-signed certificate, trust-chain, missing timestamp,
+      POSIX metadata, and JarInputStream entry-order warnings; indexed JarFile
+      verification passed. This does not establish Play acceptance.
+- [ ] Repeat release validation with the intended production configuration once
+      real app features exist; the verified bundle contains the starter app.
 - [ ] Retain the AAB and, when applicable, obfuscation symbols/mapping files with
       the release's source revision and toolchain version.
 - [ ] Test through Google Play's internal track on real hardware before promotion.
