@@ -28,8 +28,10 @@ for `Android Checks`.
 Release setup is in progress: external upload-key configuration replaces debug
 signing for release builds. The upload key was created with private permissions.
 Private signing properties are configured, and the starter's signed release AAB
-was built and its upload certificate verified locally. Encrypted backup, Play
-registration, production configuration, and Play testing remain pending.
+was built and its upload certificate verified locally. Signing files were backed
+up to the user's SynologyDrive destination and local recovery was verified.
+Remote encrypted-backup verification, Play registration, production
+configuration, and Play testing remain pending.
 
 Host checks confirmed Ubuntu 24.04.5 LTS on x86_64, 31 GiB RAM, and 236 GiB free
 disk space before installation. The Android Emulator confirms KVM is installed
@@ -458,14 +460,17 @@ generation, protected local storage, and versioning. The user confirmed they do
 not have a Google Play developer account and will create one later; this step
 has not been completed. A new JKS upload key was generated interactively outside
 the repository; passwords were entered directly in the terminal. Directory mode
-`700` and keystore mode `600` were verified. No account, payment, Play enrollment,
-or key backup has been completed by the assistant.
+`700` and keystore mode `600` were verified. Both signing files were backed up to
+the user's SynologyDrive destination and local recovery was verified (section 11).
+Encryption and separate-storage backup are provided by the user's setup, not
+independently verified by the assistant. No account, payment, or Play enrollment
+has been completed by the assistant.
 
 - [ ] Create a Google Play developer account later (deferred; not completed),
       then review current verification, target API, testing, privacy, and Data
       safety requirements.
-- [ ] Configure Play App Signing and a dedicated upload key. Back up the upload
-      keystore securely and restrict access.
+- [ ] Configure Play App Signing using the dedicated upload key already created;
+      local backup and recovery verification are recorded in section 11.
 - [ ] Keep the keystore and signing properties outside version control. Inject
       them only into approved release jobs and clean temporary copies afterward.
 - [ ] Require approval before production promotion. Use staged rollout and plan
@@ -629,7 +634,16 @@ sections retain reference guidance and tasks that can be done before scaffolding
       verified private permissions (directory `700`, keystore `600`).
 - [x] Configure private signing properties outside the repository; verified mode
       `600` and successful release signing without displaying credentials.
-- [ ] Verify encrypted upload-key backup and recovery.
+- [x] Back up `upload-keystore.jks` and `key.properties` to
+      `/XYZ/Documents/Arbeit/google.play.backup/cookbook/`
+      in `backup-2026-09-19T21-09-08-609Z-AM6KMx`, with directory mode `700` and
+      file modes `600`. Restored both files into a private temporary memory-backed
+      directory and verified byte-for-byte equality; temporary copies were removed
+      and working files were unchanged.
+- [ ] Confirm SynologyDrive synchronization and the encrypted separate-storage
+      backup completed, then test recovery from that storage. The user states
+      encryption and backup are automatic; only local-copy recovery was verified.
+      No additional file-level encryption was applied by the assistant.
 - [x] Verify version wiring: `pubspec.yaml` currently sets `1.0.0+1`, mapped to
       Android version name and code. The release guide documents increasing build
       numbers across all tracks; no version was changed during setup.
