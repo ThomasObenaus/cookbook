@@ -25,10 +25,14 @@ Run these from the repository root with GNU Make and Flutter/Dart on PATH:
 | `make test`             | Run unit and widget tests                                                        |
 | `make analyze`          | Run strict static analysis, including lint rules                                 |
 | `make build`            | Run `test`, then `lint` (including `analyze`), then build a debug APK            |
+| `make release`          | Check formatting, analyze, and test; build a signed release AAB                  |
 | `make integration-test` | Run Android integration tests on the specified device (default: `emulator-5554`) |
 
 `make lint` modifies files when formatting is needed. Build steps run in order
-and stop on failure, including when `make build` is invoked with `-j`.
+and stop on failure, including when `make build` or `make release` is invoked
+with `-j`. `make release` checks formatting without changing files and does not
+increment versions or upload to Google Play. Device integration tests and key
+backups remain separate steps.
 `make start-emulator` uses `flutter pub get`, which reuses compatible locked
 versions rather than upgrading all dependencies. Override the emulator with
 `make start-emulator EMULATOR=another_avd_name`. Run `make` to list the targets.
@@ -39,5 +43,5 @@ device selection, and installing and launching the debug app with VS Code's F5.
 
 For Google Play registration, private upload-key storage, signing, and versioning,
 see the [release setup guide](docs/release-setup.md). Release builds require local
-signing credentials; debug builds and CI do not. Play setup and the first signed
-release build are not yet verified.
+signing credentials; debug builds and CI do not. Local signed release compilation
+has been verified; Play setup and internal-track testing remain pending.

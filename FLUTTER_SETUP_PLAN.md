@@ -27,7 +27,9 @@ the user confirms a successful hosted run and working required-check enforcement
 for `Android Checks`.
 Release setup is in progress: external upload-key configuration replaces debug
 signing for release builds. The upload key was created with private permissions.
-Play registration, signing properties, backup, and a signed build remain pending.
+Private signing properties are configured, and the starter's signed release AAB
+was built and its upload certificate verified locally. Encrypted backup, Play
+registration, production configuration, and Play testing remain pending.
 
 Host checks confirmed Ubuntu 24.04.5 LTS on x86_64, 31 GiB RAM, and 236 GiB free
 disk space before installation. The Android Emulator confirms KVM is installed
@@ -625,15 +627,23 @@ sections retain reference guidance and tasks that can be done before scaffolding
 - [x] Create the upload keystore outside the repository at
       `~/.config/cookbook/upload-keystore.jks`, with alias `upload`, RSA 2048, and
       verified private permissions (directory `700`, keystore `600`).
-- [ ] Configure private signing properties and verify encrypted backup and
-      recovery. Actual signed output is unverified.
+- [x] Configure private signing properties outside the repository; verified mode
+      `600` and successful release signing without displaying credentials.
+- [ ] Verify encrypted upload-key backup and recovery.
 - [x] Verify version wiring: `pubspec.yaml` currently sets `1.0.0+1`, mapped to
       Android version name and code. The release guide documents increasing build
       numbers across all tracks; no version was changed during setup.
 - [ ] Confirm the initial release version and an unused build number against
       Play Console before uploading.
-- [ ] Run tests, then build with `flutter build appbundle --release` using the
-      intended production configuration.
+- [x] Run the starter widget test and strict analysis, then build with
+      `flutter build appbundle --release` (44.2 MB). `jarsigner` verified the
+      signature; a Java verifier checked that all 80 payload entries are signed
+      by the configured upload certificate. Credentials were not displayed.
+      The JDK reported self-signed certificate, trust-chain, missing timestamp,
+      POSIX metadata, and JarInputStream entry-order warnings; indexed JarFile
+      verification passed. This does not establish Play acceptance.
+- [ ] Repeat release validation with the intended production configuration once
+      real app features exist; the verified bundle contains the starter app.
 - [ ] Retain the AAB and, when applicable, obfuscation symbols/mapping files with
       the release's source revision and toolchain version.
 - [ ] Test through Google Play's internal track on real hardware before promotion.

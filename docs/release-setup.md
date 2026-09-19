@@ -116,10 +116,13 @@ overrides with the release. Do not reset build numbers when changing versions.
 After creating the key and properties, run from the repository root:
 
 ```bash
-make test
-make lint
-flutter build appbundle --release
+make release
 ```
+
+This checks formatting without modifying files, runs strict analysis and
+unit/widget tests with coverage, then builds the signed AAB. Steps run in order
+and stop on failure, including with `make -j`. It does not increment versions,
+upload to Google Play, run device integration tests, or back up signing keys.
 
 The usual output is `build/app/outputs/bundle/release/app-release.aab`. Verify
 its signature and compare its signer certificate with your upload certificate
