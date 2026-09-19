@@ -171,7 +171,11 @@ inspection, and hot reload with state preserved. VS Code's test integration now
 discovers and runs the widget test, and the live Flutter Inspector widget tree
 was retrieved through tooling. The user subsequently confirmed manual Testing UI
 and Inspector widget selection, completion, diagnostics, and Flutter SDK 3.47.5.
-DevTools memory, network, and performance checks remain pending.
+DevTools Performance frame capture and inspection work on the starter app
+(user confirmed after the physical-phone profile-mode walkthrough).
+DevTools Memory monitoring and garbage-collection controls also work (user
+confirmed). Network inspection remains pending; feature-level performance and
+memory-leak validation are still required as the app develops.
 
 Do not use ESLint or Prettier to lint/format Dart. Kotlin and Java extensions are
 not required for ordinary Flutter development; use Android Studio when working
@@ -501,7 +505,13 @@ sections retain reference guidance and tasks that can be done before scaffolding
       widget tree; verified Cookbook's Scaffold, AppBar, counter, and button.
 - [x] Open Flutter Inspector and select a widget to inspect its place in the
       widget tree (user verified).
-- [ ] Use DevTools for memory/network/performance checks.
+- [x] Verify DevTools Performance frame capture, pause/resume, and frame
+      inspection on the starter app (user confirmed after the physical-phone
+      profile-mode walkthrough). This verifies tooling, not release performance.
+- [x] Verify DevTools Memory monitoring and garbage-collection controls
+      (user confirmed). This verifies tooling, not the absence of memory leaks.
+- [ ] Verify DevTools Network inspection when the app makes network requests;
+      the counter starter has no application network traffic to exercise.
 
 ### Project Baseline and Quality Checks
 
@@ -521,13 +531,22 @@ sections retain reference guidance and tasks that can be done before scaffolding
 - [x] Add `.github/dependabot.yml` for weekly Monday Pub and GitHub Actions
       version-update checks, with five open PRs per ecosystem and no auto-merge.
       Local YAML, schedule, and project-location checks passed.
-- [ ] Merge the Dependabot configuration into the default branch and verify
-      successful hosted update jobs; absence of a PR can mean no update is needed.
+- [x] Verify hosted GitHub Actions version updates are active: the user shared
+      a Dependabot PR with the `github_actions` label.
+- [x] Verify the hosted Pub update job completes successfully: the user's
+      screenshot shows successful `pubspec.yaml` version-update jobs 1583254806
+      and 1583254801, both reporting "No PRs affected". This verifies hosted
+      execution, not the absence of vulnerabilities or all possible upgrades.
 - [ ] Review dependency update PRs for compatibility, licenses, and security
       advisories; require passing CI. Keep Flutter/Java/Android upgrades coordinated
       manually and action revisions pinned to commit hashes.
-- [ ] Review GitHub Dependabot alert/security-update settings where supported;
-      scheduled version updates alone do not establish vulnerability coverage.
+- [x] Review GitHub Dependabot alert/security-update settings: the user confirms
+      enabling Dependency graph, Dependabot alerts, and Dependabot security
+      updates. Remote settings were user-verified, not independently inspected
+      by the assistant. Security updates create PRs; they do not auto-merge them.
+      Coverage depends on ecosystem and advisory support; GitHub's documented
+      Actions alert support excludes commit-SHA references. Keep action SHA pins
+      and continue version updates and advisory review.
 
 ### Feature and Device Validation
 
