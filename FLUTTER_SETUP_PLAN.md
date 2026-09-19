@@ -350,12 +350,12 @@ required for the Flutter build pipeline.
 | Manual/device | Real phone and emulator            | Permissions, accessibility, lifecycle, release behavior |
 
 Unit and widget tests run without an Android emulator. Integration tests require
-a configured target device. Add `integration_test` as a Flutter SDK development
-dependency and create the tests before running this example; replace `DEVICE_ID`
-with an ID from `flutter devices`:
+a configured target device. The Flutter SDK `integration_test` development
+dependency and starter smoke test are now present. Replace `DEVICE_ID` with
+an ID from `flutter devices`:
 
 ```bash
-flutter test integration_test -d DEVICE_ID
+flutter test integration_test/app_test.dart -d DEVICE_ID
 ```
 
 Use fakes/mocks to isolate ordinary tests from production services. Standard
@@ -555,8 +555,13 @@ sections retain reference guidance and tasks that can be done before scaffolding
       and a tablet/foldable size if those form factors are supported.
 - [ ] Check permission denial, offline behavior, background/resume behavior, and
       notifications where applicable.
-- [ ] Add `integration_test` and a critical end-to-end test, then run it on an
-      Android device using section 6's guidance.
+- [x] Add Flutter SDK `integration_test` and run the starter Android smoke test.
+      `integration_test/app_test.dart` launches the app through `main()`, checks
+      the Cookbook screen, and verifies counter changes from 0 to 1 to 2.
+      Passed on the Android emulator (`emulator-5554`); physical-phone execution
+      of this automated test and emulator CI have not been verified.
+- [ ] Extend integration coverage to a critical feature workflow once real app
+      features exist; the counter test verifies only the starter setup.
 - [ ] Measure performance on real hardware in profile mode, not debug mode.
 - [ ] Track coverage for important logic; generating a report does not enforce
       a threshold. Set an explicit threshold later if useful.
