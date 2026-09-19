@@ -19,7 +19,8 @@ completion, diagnostics, Testing UI, and Inspector widget selection work.
 Section 3 emulator setup is verified: Pixel_8_API_36 boots successfully
 and is detected by ADB and Flutter. Physical-device checks remain pending.
 Section 4's Android-only Flutter starter now exists at the repository
-root. CI and release setup remain outside the current step.
+root. The GitHub Actions CI workflow is implemented and locally validated;
+its first hosted run and merge protection remain pending. Release setup is deferred.
 
 Host checks confirmed Ubuntu 24.04.5 LTS on x86_64, 31 GiB RAM, and 236 GiB free
 disk space before installation. The Android Emulator confirms KVM is installed
@@ -269,7 +270,7 @@ and target API based on plugin requirements and current Play policy.
   adopted, so the future-plugin review remains pending.
 - Dependency resolution, static analysis, the starter widget test, and formatting
   checks passed. The user confirms debugger and hot-reload checks passed;
-      VS Code test integration also discovered and passed the starter widget test.
+  VS Code test integration also discovered and passed the starter widget test.
 - `flutter pub outdated` reports current direct dependencies and newer versions
   of four transitive dependencies. The generated lockfile was retained without
   upgrades or overrides; this report is not a security audit.
@@ -279,10 +280,10 @@ and target API based on plugin requirements and current Play policy.
 - The first debug APK build was interrupted, but the user's subsequent
   `make build` completed with exit code 0, verifying tests, formatting, analysis,
   and debug APK compilation. The JDK native-access warning did not block it.
-      A subsequent `flutter test --coverage` passed and produced `coverage/lcov.info`:
-      24/26 lines (92.3%) covered in `lib/main.dart`. Only the `main()` entry point
-      was uncovered; the widget test constructs `MyApp` directly. No coverage
-      threshold is enforced, and this measures only the starter example.
+  A subsequent `flutter test --coverage` passed and produced `coverage/lcov.info`:
+  24/26 lines (92.3%) covered in `lib/main.dart`. Only the `main()` entry point
+  was uncovered; the widget test constructs `MyApp` directly. No coverage
+  threshold is enforced, and this measures only the starter example.
 
 Post-scaffolding repository and dependency tasks are collected in section 11.
 
@@ -369,8 +370,8 @@ be provisioned for initial local setup.
 
 ### Pull Request Gate
 
-This is the reference pipeline; implementation and verification are tracked in
-section 11 after an app exists.
+The pipeline is implemented in `.github/workflows/flutter-ci.yml`; hosted
+verification and merge protection are tracked separately in section 11.
 
 1. Check out the repository with minimal permissions.
 2. Install the exact pinned Flutter SDK, compatible JDK, and required Android SDK
@@ -391,6 +392,28 @@ runner supports accelerated emulators.
 Untrusted pull requests must not receive release secrets. Do not execute
 untrusted contribution code in a privileged release context. Start with separate
 validation and release workflows.
+
+### CI Setup Status
+
+- Added `Flutter CI` with the `Android Checks` job for pull requests, all branch
+  pushes, and manual dispatch on Ubuntu 24.04. Push and pull-request events can
+  both run for a branch with an open pull request.
+- Pinned actions to immutable revisions and Flutter to 3.47.5; selected Temurin
+  JDK 25.0.3 and explicit Android platform/build-tools/NDK/CMake versions matching
+  the local setup. Flutter is configured to use that JDK and the runner's SDK.
+- Enabled Gradle and Flutter/Pub caches, read-only repository permissions,
+  cancellation of superseded runs, and a 30-minute job timeout. Checkout does
+  not persist credentials; the workflow references no release secrets.
+- Added locked dependency resolution, non-mutating formatting checks, strict
+  analysis, coverage tests, and debug APK compilation. Coverage and successful
+  APK artifacts are retained for seven days; available coverage is retained
+  after a later failure. No coverage threshold is enforced.
+- YAML checks, actionlint, pinned action input checks, and the local dependency,
+  formatting, analysis, and coverage gates passed. The debug build previously
+  passed locally, but the GitHub-hosted toolchain and build are not yet verified.
+- No commit, push, or remote repository settings changes were made. Push the
+  workflow, inspect its first run, then require `Android Checks` on the target
+  branch using a ruleset or branch protection. Emulator integration CI is deferred.
 
 ## 9. Release Pipeline
 
@@ -512,8 +535,10 @@ sections retain reference guidance and tasks that can be done before scaffolding
 
 ### CI and Release Validation
 
-- [ ] Implement and verify section 8's pull request gate against the app, then
-      require its checks before merging.
+- [x] Implement section 8's pull request gate and validate its workflow and local
+      quality commands.
+- [ ] Push the workflow and verify a successful GitHub-hosted `Android Checks` run.
+- [ ] Require `Android Checks` before merging via a branch ruleset or protection.
 - [ ] Run an integration smoke test on important pull requests or a scheduled
       job using section 8's emulator and untrusted-contribution safeguards.
 - [ ] Configure release signing explicitly; a template build that uses debug

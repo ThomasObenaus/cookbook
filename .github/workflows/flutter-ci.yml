@@ -1,0 +1,85 @@
+name: Flutter CI
+
+on:
+    pull_request:
+    push:
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: flutter-ci-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    android-checks:
+        name: Android Checks
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+        steps:
+            - name: Check out source
+              uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+              with:
+                  persist-credentials: false
+
+            - name: Set up Java
+              uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+              with:
+                  distribution: temurin
+                  java-version: "25.0.3"
+                  cache: gradle
+                  cache-dependency-path: |
+                      android/**/*.gradle.kts
+                      android/gradle.properties
+                      android/gradle/wrapper/gradle-wrapper.properties
+                      pubspec.lock
+
+            - name: Set up Flutter
+              uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+              with:
+                  flutter-version: "3.47.5"
+                  channel: stable
+                  cache: true
+                  pub-cache-key: pub-${{ runner.os }}-${{ runner.arch }}-flutter-3.47.5-${{ hashFiles('pubspec.lock') }}
+
+            - name: Set up Android SDK
+              uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
+
+            - name: Install Android build dependencies
+              run: |
+                  sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358" "cmake;3.22.1"
+                  flutter config --jdk-dir="$JAVA_HOME"
+                  flutter config --android-sdk="$ANDROID_HOME"
+
+            - name: Resolve locked dependencies
+              run: flutter pub get --enforce-lockfile
+
+            - name: Check formatting
+              run: dart format --output=none --set-exit-if-changed .
+
+            - name: Analyze
+              run: flutter analyze --no-pub --fatal-infos --fatal-warnings
+
+            - name: Test with coverage
+              run: flutter test --no-pub --coverage
+
+            - name: Build debug APK
+              run: flutter build apk --debug --no-pub
+
+            - name: Upload coverage
+              if: ${{ !cancelled() && hashFiles('coverage/lcov.info') != '' }}
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+              with:
+                  name: coverage
+                  path: coverage/lcov.info
+                  if-no-files-found: error
+                  retention-days: 7
+
+            - name: Upload debug APK
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+              with:
+                  name: debug-apk
+                  path: build/app/outputs/flutter-apk/app-debug.apk
+                  if-no-files-found: error
+                  retention-days: 7
