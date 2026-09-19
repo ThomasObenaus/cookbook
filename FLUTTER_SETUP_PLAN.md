@@ -13,8 +13,9 @@ Section 1 host and SDK setup is complete and Flutter Doctor passes the Android
 toolchain check. Flutter, Android, and Java environment settings are persistent
 in Bash. The user confirms shell setup and VS Code restart are complete.
 The user confirms clicking Finish in Android Studio's first-launch wizard.
-Extensions, virtual
-device creation, project scaffolding, and CI remain outside the current step.
+Section 2 editor configuration is ready; runtime verification awaits a Flutter
+project and Android device. Virtual device creation, project scaffolding, and CI
+remain outside the current step.
 
 Host checks confirmed Ubuntu 24.04.5 LTS on x86_64, 31 GiB RAM, and 236 GiB free
 disk space before installation. The Android Emulator confirms KVM is installed
@@ -131,15 +132,39 @@ DevTools extension is required. AI assistance is optional, not a pipeline depend
 During implementation:
 
 - [ ] Open the Flutter project root, not just its Android subdirectory.
-- [ ] Set the Dart extension as the formatter for Dart files and enable
+- [x] Set the Dart extension as the formatter for Dart files and enable
       format-on-save for Dart.
-- [ ] Confirm the extension and terminal select the same Flutter SDK.
-- [ ] Add team extension recommendations and portable workspace settings to the
+- [x] Configure the extension to use the terminal's Flutter SDK in user settings.
+- [ ] Confirm the active extension reports that SDK after opening a Flutter project.
+- [x] Add team extension recommendations and portable workspace settings to the
       repository. Keep machine-specific absolute SDK paths in user settings.
 - [ ] Start with the default F5 launch behavior; add launch configurations only
       when flavors or environment arguments require them.
 - [ ] Verify completion, diagnostics, a Dart breakpoint, hot reload, the testing
       UI, and Flutter Inspector.
+
+### Editor Setup Status
+
+All listed extensions were already installed; no new installations were needed:
+Flutter and Dart 3.142.0, YAML 1.24.0, Error Lens 3.28.0, markdownlint 0.62.1,
+GitHub Actions 0.32.3, and GitLens 19.2.0. Installation does not by itself verify
+extension activation or enabled status in a Flutter workspace.
+
+- `.vscode/settings.json` selects `Dart-Code.dart-code` as the Dart formatter
+  and enables format-on-save only for Dart, leaving other languages unchanged.
+- `.vscode/extensions.json` recommends the required and recommended extensions.
+  Optional GitHub Actions and GitLens remain optional and are already installed.
+- VS Code user settings set `dart.flutterSdkPath` to
+  `/home/winnietom/development/flutter`, matching terminal Flutter 3.47.5.
+- Configuration JSON checks passed, and VS Code reported no errors in the settings
+  or extension recommendations. No custom launch configuration was added.
+
+There is no `pubspec.yaml` yet, so this repository is not currently a Flutter
+project. Open the repository as a VS Code folder to apply its workspace settings;
+after scaffolding, open the folder containing the app's `pubspec.yaml`. Verify
+completion and diagnostics there, run a test through the testing UI, then use an
+Android device to verify F5, a breakpoint, hot reload, and Flutter Inspector.
+Do not mark these runtime checks complete until they have been exercised.
 
 Do not use ESLint or Prettier to lint/format Dart. Kotlin and Java extensions are
 not required for ordinary Flutter development; use Android Studio when working
