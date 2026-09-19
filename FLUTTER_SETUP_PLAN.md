@@ -20,7 +20,8 @@ Section 3 emulator setup is verified: Pixel_8_API_36 boots successfully
 and is detected by ADB and Flutter. Physical-device checks remain pending.
 Section 4's Android-only Flutter starter now exists at the repository
 root. The GitHub Actions CI workflow is implemented and locally validated;
-its first hosted run and merge protection remain pending. Release setup is deferred.
+the user confirms a successful hosted run. Merge protection remains pending.
+Release setup is deferred.
 
 Host checks confirmed Ubuntu 24.04.5 LTS on x86_64, 31 GiB RAM, and 236 GiB free
 disk space before installation. The Android Emulator confirms KVM is installed
@@ -410,9 +411,13 @@ validation and release workflows.
   after a later failure. No coverage threshold is enforced.
 - YAML checks, actionlint, pinned action input checks, and the local dependency,
   formatting, analysis, and coverage gates passed. The debug build previously
-  passed locally, but the GitHub-hosted toolchain and build are not yet verified.
-- No commit, push, or remote repository settings changes were made. Push the
-  workflow, inspect its first run, then require `Android Checks` on the target
+  passed locally. The user confirms the entire GitHub-hosted `Android Checks`
+  job passed, including the debug APK build and artifact uploads.
+- The first hosted SDK setup failed because the pinned Android action requested
+  the obsolete `tools` package by default. Setting `packages: platform-tools`
+  resolved that failure; the subsequent full job passed (user confirmed).
+- No commit, push, or remote repository settings changes were made by the
+  assistant. Next, require `Android Checks` on the target
   branch using a ruleset or branch protection. Emulator integration CI is deferred.
 
 ## 9. Release Pipeline
@@ -537,7 +542,8 @@ sections retain reference guidance and tasks that can be done before scaffolding
 
 - [x] Implement section 8's pull request gate and validate its workflow and local
       quality commands.
-- [ ] Push the workflow and verify a successful GitHub-hosted `Android Checks` run.
+- [x] Push the workflow and verify a successful GitHub-hosted `Android Checks` run
+      (user confirmed, including APK build and artifact uploads).
 - [ ] Require `Android Checks` before merging via a branch ruleset or protection.
 - [ ] Run an integration smoke test on important pull requests or a scheduled
       job using section 8's emulator and untrusted-contribution safeguards.
