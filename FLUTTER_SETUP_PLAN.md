@@ -13,10 +13,12 @@ Section 1 host and SDK setup is complete and Flutter Doctor passes the Android
 toolchain check. Flutter, Android, and Java environment settings are persistent
 in Bash. The user confirms shell setup and VS Code restart are complete.
 The user confirms clicking Finish in Android Studio's first-launch wizard.
-Section 2 editor configuration is ready; its runtime checks remain pending.
+Section 2 editor configuration is ready; the user confirms F5 launch, breakpoints,
+variable inspection, and hot reload work. The user also confirms the SDK version,
+completion, diagnostics, Testing UI, and Inspector widget selection work.
 Section 3 emulator setup is verified: Pixel_8_API_36 boots successfully
-and is detected by ADB and Flutter. App launch and physical-device checks remain
-pending. Section 4's Android-only Flutter starter now exists at the repository
+and is detected by ADB and Flutter. Physical-device checks remain pending.
+Section 4's Android-only Flutter starter now exists at the repository
 root. CI and release setup remain outside the current step.
 
 Host checks confirmed Ubuntu 24.04.5 LTS on x86_64, 31 GiB RAM, and 236 GiB free
@@ -69,7 +71,7 @@ locations checked. All SDK downloads passed their published SHA-256 checks.
 
 Flutter is configured with explicit Android SDK, Android Studio, and JDK paths.
 The installed Flutter template uses Gradle 9.3.1 and AGP 9.1.0. The starter app
-has been created; Android build verification is tracked in section 11.
+has been created and the user's subsequent `make build` completed successfully.
 
 Verified: Flutter/Dart versions, Android toolchain in `flutter doctor -v`, all
 Android SDK licenses accepted, `adb version`, installed SDK packages, and
@@ -157,11 +159,13 @@ extension activation or enabled status in a Flutter workspace.
 - Configuration JSON checks passed, and VS Code reported no errors in the settings
   or extension recommendations. No custom launch configuration was added.
 
-The repository root now contains the Flutter app's `pubspec.yaml`.
-Open this root as a VS Code folder to apply its workspace settings. Verify
-completion and diagnostics there, run a test through the testing UI, then use an
-Android device to verify F5, a breakpoint, hot reload, and Flutter Inspector.
-Do not mark these runtime checks complete until they have been exercised.
+The user resolved Dart-only workspace detection by opening the Flutter project
+root and reloading VS Code, then confirmed F5 launch, a breakpoint, variable
+inspection, and hot reload with state preserved. VS Code's test integration now
+discovers and runs the widget test, and the live Flutter Inspector widget tree
+was retrieved through tooling. The user subsequently confirmed manual Testing UI
+and Inspector widget selection, completion, diagnostics, and Flutter SDK 3.47.5.
+DevTools memory, network, and performance checks remain pending.
 
 Do not use ESLint or Prettier to lint/format Dart. Kotlin and Java extensions are
 not required for ordinary Flutter development; use Android Studio when working
@@ -226,8 +230,8 @@ The emulator was left running. After closing it, launch it again with:
 flutter emulators --launch Pixel_8_API_36
 ```
 
-VS Code device selection and F5 remain pending; the starter app is now available.
-Those checks and app-dependent device coverage are collected in section 11.
+The user confirms selecting the emulator and launching the starter with F5 works.
+App-dependent device coverage is collected in section 11.
 Physical-phone setup below is not yet verified.
 
 ### Device Coverage
@@ -264,16 +268,21 @@ and target API based on plugin requirements and current Play policy.
   1.0.9), `flutter_test`, and `flutter_lints` (6.0.0). No feature plugins were
   adopted, so the future-plugin review remains pending.
 - Dependency resolution, static analysis, the starter widget test, and formatting
-  checks passed. VS Code test discovery and debugger checks remain unverified.
+  checks passed. The user confirms debugger and hot-reload checks passed;
+      VS Code test integration also discovered and passed the starter widget test.
 - `flutter pub outdated` reports current direct dependencies and newer versions
   of four transitive dependencies. The generated lockfile was retained without
   upgrades or overrides; this report is not a security audit.
 - Generated ignore rules exclude build output, Dart caches, Android local SDK
   paths, and Android signing keys/properties. The generated project and lockfile
   are tracked in Git; no files were staged or committed by the assistant.
-- The first debug APK build was interrupted before a result. It emitted JDK
-  native-access and SDK XML version warnings; Android compilation remains
-  unverified and the build check in section 11 stays open.
+- The first debug APK build was interrupted, but the user's subsequent
+  `make build` completed with exit code 0, verifying tests, formatting, analysis,
+  and debug APK compilation. The JDK native-access warning did not block it.
+      A subsequent `flutter test --coverage` passed and produced `coverage/lcov.info`:
+      24/26 lines (92.3%) covered in `lib/main.dart`. Only the `main()` entry point
+      was uncovered; the widget test constructs `MyApp` directly. No coverage
+      threshold is enforced, and this measures only the starter example.
 
 Post-scaffolding repository and dependency tasks are collected in section 11.
 
@@ -438,27 +447,35 @@ sections retain reference guidance and tasks that can be done before scaffolding
 
 ### Example App and VS Code Verification
 
-- [ ] Open the Flutter project root, not just its Android subdirectory.
-- [ ] Confirm the active extension reports the configured Flutter SDK after
-      opening a Flutter project.
-- [ ] Start with the default F5 launch behavior; add launch configurations only
+- [x] Open the Flutter project root, not just its Android subdirectory.
+- [x] Confirm the active extension reports the configured Flutter SDK after
+      opening a Flutter project (Flutter 3.47.5, user verified).
+- [x] Start with the default F5 launch behavior; add launch configurations only
       when flavors or environment arguments require them.
-- [ ] Select the device from VS Code's status bar and launch the app with F5.
-- [ ] Verify completion, diagnostics, a Dart breakpoint, hot reload, the testing
-      UI, and Flutter Inspector.
-- [ ] Confirm VS Code breakpoints, variable inspection, and hot reload work.
-- [ ] Use Flutter Inspector for layout and DevTools for memory/network/performance.
+- [x] Select the device from VS Code's status bar and launch the app with F5.
+- [x] Verify completion, diagnostics, and the Testing UI (user verified).
+- [x] Verify VS Code test discovery and execution through its test integration
+      (one widget test passed, including a coverage run).
+- [x] Confirm VS Code breakpoints, variable inspection, and hot reload work
+      (user verified; hot reload preserves the counter state).
+- [x] Connect to the IDE-launched app and retrieve its live Flutter Inspector
+      widget tree; verified Cookbook's Scaffold, AppBar, counter, and button.
+- [x] Open Flutter Inspector and select a widget to inspect its place in the
+      widget tree (user verified).
+- [ ] Use DevTools for memory/network/performance checks.
 
 ### Project Baseline and Quality Checks
 
 - [x] Keep the app's `pubspec.lock` in Git for reproducible dependency resolution.
 - [x] Keep generated build output, SDK caches, local SDK paths, credentials, and
       signing material out of Git; review the generated ignore rules.
-- [ ] Verify the template's `flutter_lints` dependency and analyzer configuration
+- [x] Verify the template's `flutter_lints` dependency and analyzer configuration
       using section 5; avoid adding a second ruleset.
-- [ ] Run dependency resolution, formatting, static analysis, and widget/unit
-      tests with coverage using the commands in section 5.
-- [ ] Build a debug APK with `flutter build apk --debug` to verify Android
+- [x] Run dependency resolution, formatting, static analysis, and widget/unit
+      tests; verified during setup and by the user's successful `make build`.
+- [x] Run `flutter test --coverage` and verify the generated coverage report
+      (`coverage/lcov.info`, 24/26 lines covered in `lib/main.dart`).
+- [x] Build a debug APK with `flutter build apk --debug` to verify Android
       project-level toolchain compatibility.
 - [ ] Review `flutter pub outdated` regularly; upgrade in a separate change and
       rerun tests. An outdated-package report is not a security vulnerability scan.

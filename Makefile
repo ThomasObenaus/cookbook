@@ -26,7 +26,7 @@ lint:
 	$(MAKE) analyze
 
 test:
-	$(FLUTTER) test
+	$(FLUTTER) test --coverage
 
 analyze:
 	$(FLUTTER) analyze --fatal-infos --fatal-warnings
