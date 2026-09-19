@@ -20,7 +20,8 @@ Section 3 emulator setup is verified: Pixel_8_API_36 boots successfully
 and is detected by ADB and Flutter. Physical-device checks remain pending.
 Section 4's Android-only Flutter starter now exists at the repository
 root. The GitHub Actions CI workflow is implemented and locally validated;
-the user confirms a successful hosted run. Merge protection remains pending.
+the user confirms a successful hosted run and working required-check enforcement
+for `Android Checks`.
 Release setup is deferred.
 
 Host checks confirmed Ubuntu 24.04.5 LTS on x86_64, 31 GiB RAM, and 236 GiB free
@@ -417,8 +418,10 @@ validation and release workflows.
   the obsolete `tools` package by default. Setting `packages: platform-tools`
   resolved that failure; the subsequent full job passed (user confirmed).
 - No commit, push, or remote repository settings changes were made by the
-  assistant. Next, require `Android Checks` on the target
-  branch using a ruleset or branch protection. Emulator integration CI is deferred.
+  assistant. The user configured the required `Android Checks` status check
+  through GitHub's ruleset or branch protection settings and confirms it works.
+  Remote enforcement was user-verified, not independently inspected by the
+  assistant. Emulator integration CI is deferred.
 
 ## 9. Release Pipeline
 
@@ -544,7 +547,8 @@ sections retain reference guidance and tasks that can be done before scaffolding
       quality commands.
 - [x] Push the workflow and verify a successful GitHub-hosted `Android Checks` run
       (user confirmed, including APK build and artifact uploads).
-- [ ] Require `Android Checks` before merging via a branch ruleset or protection.
+- [x] Require `Android Checks` before merging via a branch ruleset or protection
+      (configured and verified by the user).
 - [ ] Run an integration smoke test on important pull requests or a scheduled
       job using section 8's emulator and untrusted-contribution safeguards.
 - [ ] Configure release signing explicitly; a template build that uses debug
