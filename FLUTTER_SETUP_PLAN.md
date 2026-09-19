@@ -510,8 +510,16 @@ sections retain reference guidance and tasks that can be done before scaffolding
       project-level toolchain compatibility.
 - [ ] Review `flutter pub outdated` regularly; upgrade in a separate change and
       rerun tests. An outdated-package report is not a security vulnerability scan.
-- [ ] Use a dependency update service such as Dependabot or Renovate if supported
-      by the chosen repository host; include security/advisory review.
+- [x] Add `.github/dependabot.yml` for weekly Monday Pub and GitHub Actions
+      version-update checks, with five open PRs per ecosystem and no auto-merge.
+      Local YAML, schedule, and project-location checks passed.
+- [ ] Merge the Dependabot configuration into the default branch and verify
+      successful hosted update jobs; absence of a PR can mean no update is needed.
+- [ ] Review dependency update PRs for compatibility, licenses, and security
+      advisories; require passing CI. Keep Flutter/Java/Android upgrades coordinated
+      manually and action revisions pinned to commit hashes.
+- [ ] Review GitHub Dependabot alert/security-update settings where supported;
+      scheduled version updates alone do not establish vulnerability coverage.
 
 ### Feature and Device Validation
 
