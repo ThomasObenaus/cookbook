@@ -13,10 +13,11 @@ Section 1 host and SDK setup is complete and Flutter Doctor passes the Android
 toolchain check. Flutter, Android, and Java environment settings are persistent
 in Bash. The user confirms shell setup and VS Code restart are complete.
 The user confirms clicking Finish in Android Studio's first-launch wizard.
-Section 2 editor configuration is ready; runtime verification awaits a Flutter
-project. Section 3 emulator setup is verified: Pixel_8_API_36 boots successfully
+Section 2 editor configuration is ready; its runtime checks remain pending.
+Section 3 emulator setup is verified: Pixel_8_API_36 boots successfully
 and is detected by ADB and Flutter. App launch and physical-device checks remain
-pending. Project scaffolding and CI remain outside the current step.
+pending. Section 4's Android-only Flutter starter now exists at the repository
+root. CI and release setup remain outside the current step.
 
 Host checks confirmed Ubuntu 24.04.5 LTS on x86_64, 31 GiB RAM, and 236 GiB free
 disk space before installation. The Android Emulator confirms KVM is installed
@@ -67,8 +68,8 @@ locations checked. All SDK downloads passed their published SHA-256 checks.
 | NDK / CMake               | 28.2.13676358 / 3.22.1                                       |
 
 Flutter is configured with explicit Android SDK, Android Studio, and JDK paths.
-The installed Flutter template uses Gradle 9.3.1 and AGP 9.1.0. No app has been
-created or built yet, so project-level compatibility remains to be tested.
+The installed Flutter template uses Gradle 9.3.1 and AGP 9.1.0. The starter app
+has been created; Android build verification is tracked in section 11.
 
 Verified: Flutter/Dart versions, Android toolchain in `flutter doctor -v`, all
 Android SDK licenses accepted, `adb version`, installed SDK packages, and
@@ -156,9 +157,8 @@ extension activation or enabled status in a Flutter workspace.
 - Configuration JSON checks passed, and VS Code reported no errors in the settings
   or extension recommendations. No custom launch configuration was added.
 
-There is no `pubspec.yaml` yet, so this repository is not currently a Flutter
-project. Open the repository as a VS Code folder to apply its workspace settings;
-after scaffolding, open the folder containing the app's `pubspec.yaml`. Verify
+The repository root now contains the Flutter app's `pubspec.yaml`.
+Open this root as a VS Code folder to apply its workspace settings. Verify
 completion and diagnostics there, run a test through the testing UI, then use an
 Android device to verify F5, a breakpoint, hot reload, and Flutter Inspector.
 Do not mark these runtime checks complete until they have been exercised.
@@ -226,7 +226,7 @@ The emulator was left running. After closing it, launch it again with:
 flutter emulators --launch Pixel_8_API_36
 ```
 
-VS Code device selection and F5 remain pending until the Flutter app exists.
+VS Code device selection and F5 remain pending; the starter app is now available.
 Those checks and app-dependent device coverage are collected in section 11.
 Physical-phone setup below is not yet verified.
 
@@ -242,13 +242,38 @@ and target API based on plugin requirements and current Play policy.
 
 ## 4. Project Baseline and Dependency Management
 
-- [ ] Agree on the app name, repository layout, and permanent Android application
+- [x] Agree on the app name, repository layout, and permanent Android application
       ID before scaffolding. Do not overwrite existing repository content.
-- [ ] Create an Android-targeted Flutter app through VS Code or the Flutter CLI.
-- [ ] Start with Flutter's standard project layout. Select state management,
+- [x] Create an Android-targeted Flutter app through VS Code or the Flutter CLI.
+- [x] Start with Flutter's standard project layout. Select state management,
       routing, storage, and HTTP packages only when application requirements justify them.
 - [ ] Review plugin maintenance, licenses, supported Android APIs, native
-      dependencies, permissions, and security before adoption.
+      dependencies, permissions, and security before adoption of future plugins.
+
+### Project Setup Status
+
+- Dart project name: `cookbook`; display name: **Cookbook**.
+- Android application ID and namespace: `com.thomaso.cookbook`.
+- Standard `lib/`, `android/`, and `test/` folders live at the repository root.
+  Any future backend will use a separate repository.
+- Generated with Flutter 3.47.5, targeting Android only, with Kotlin native
+  integration. The counter starter is retained for development-tool verification.
+- Existing license, setup plan, and VS Code settings were preserved. The README
+  now documents the project layout and development commands.
+- Only template dependencies are present: Flutter, `cupertino_icons` (resolved
+  1.0.9), `flutter_test`, and `flutter_lints` (6.0.0). No feature plugins were
+  adopted, so the future-plugin review remains pending.
+- Dependency resolution, static analysis, the starter widget test, and formatting
+  checks passed. VS Code test discovery and debugger checks remain unverified.
+- `flutter pub outdated` reports current direct dependencies and newer versions
+  of four transitive dependencies. The generated lockfile was retained without
+  upgrades or overrides; this report is not a security audit.
+- Generated ignore rules exclude build output, Dart caches, Android local SDK
+  paths, and Android signing keys/properties. The generated project and lockfile
+  are tracked in Git; no files were staged or committed by the assistant.
+- The first debug APK build was interrupted before a result. It emitted JDK
+  native-access and SDK XML version warnings; Android compilation remains
+  unverified and the build check in section 11 stays open.
 
 Post-scaffolding repository and dependency tasks are collected in section 11.
 
@@ -406,8 +431,8 @@ builds would require macOS and Xcode and are outside this Linux/Android plan.
 
 ## 11. Pending Steps Requiring an App
 
-These steps remain unchecked until at least an example Flutter app has been
-created in section 4. Start with the example-app checks; feature-specific and
+An example Flutter app now exists from section 4. Check off each step only after
+it has been verified. Start with the example-app checks; feature-specific and
 release tasks need a more developed app and apply only when relevant. Earlier
 sections retain reference guidance and tasks that can be done before scaffolding.
 
@@ -426,8 +451,8 @@ sections retain reference guidance and tasks that can be done before scaffolding
 
 ### Project Baseline and Quality Checks
 
-- [ ] Keep the app's `pubspec.lock` in Git for reproducible dependency resolution.
-- [ ] Keep generated build output, SDK caches, local SDK paths, credentials, and
+- [x] Keep the app's `pubspec.lock` in Git for reproducible dependency resolution.
+- [x] Keep generated build output, SDK caches, local SDK paths, credentials, and
       signing material out of Git; review the generated ignore rules.
 - [ ] Verify the template's `flutter_lints` dependency and analyzer configuration
       using section 5; avoid adding a second ruleset.
