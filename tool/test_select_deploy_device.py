@@ -60,6 +60,32 @@ class DiscoverAndroidDevicesTest(unittest.TestCase):
             text=True,
         )
 
+    @patch("select_deploy_device.subprocess.run")
+    def test_splits_a_flutter_command_with_a_wrapper(self, run) -> None:
+        run.return_value = subprocess.CompletedProcess(
+            args=["env", "flutter", "devices", "--machine"],
+            returncode=0,
+            stdout="[]",
+            stderr="",
+        )
+
+        discover_android_devices("env flutter")
+
+        run.assert_called_once_with(
+            ["env", "flutter", "devices", "--machine"],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+
+    @patch(
+        "select_deploy_device.subprocess.run",
+        side_effect=FileNotFoundError("missing executable"),
+    )
+    def test_converts_command_launch_failures(self, run) -> None:
+        with self.assertRaisesRegex(RuntimeError, "Could not run the Flutter command"):
+            discover_android_devices("missing-flutter")
+
 
 class SelectDeviceTest(unittest.TestCase):
     def test_prompts_until_a_listed_device_is_selected(self) -> None:

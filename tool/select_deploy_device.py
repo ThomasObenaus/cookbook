@@ -1,5 +1,6 @@
 import argparse
 import json
+import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -15,12 +16,22 @@ class AndroidDevice:
 
 
 def discover_android_devices(flutter: str) -> list[AndroidDevice]:
-    result = subprocess.run(
-        [flutter, "devices", "--machine"],
-        capture_output=True,
-        check=False,
-        text=True,
-    )
+    try:
+        flutter_command = shlex.split(flutter)
+    except ValueError as error:
+        raise RuntimeError(f"Invalid Flutter command: {error}") from error
+    if not flutter_command:
+        raise RuntimeError("The Flutter command must not be empty.")
+
+    try:
+        result = subprocess.run(
+            [*flutter_command, "devices", "--machine"],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+    except OSError as error:
+        raise RuntimeError(f"Could not run the Flutter command: {error}") from error
     if result.returncode != 0:
         details = result.stderr.strip() or result.stdout.strip()
         raise RuntimeError(details or "Flutter device discovery failed.")
