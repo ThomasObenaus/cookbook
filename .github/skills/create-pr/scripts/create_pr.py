@@ -131,7 +131,9 @@ def sync_pull_request(content: PullRequestContent) -> subprocess.CompletedProces
         check=False,
     )
     if view_result.returncode != 0:
-        return create_pull_request(content)
+        if re.search(r"(?im)^no pull requests? found(?:\s|$)", view_result.stderr):
+            return create_pull_request(content)
+        return view_result
 
     try:
         pull_request = json.loads(view_result.stdout)

@@ -56,10 +56,7 @@ def validate_review(report_path: str | Path = "REVIEW.md") -> ValidationResult:
         result.errors.append("Unclosed fenced code block.")
 
     if [(level, title) for level, title, _ in headings] != list(EXPECTED_HEADINGS):
-        result.errors.append(
-            "Expected headings: ## Findings; ### LOW; ### MEDIUM; ### HIGH; "
-            "## Title; ## summary; ### Why, in that order."
-        )
+        result.errors.append("Expected headings: ## Findings; ### LOW; ### MEDIUM; ### HIGH; ## Title; ## summary; ### Why, in that order.")
 
     title_index = next(
         (index for level, title, index in headings if (level, title) == (2, "Title")),

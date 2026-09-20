@@ -64,7 +64,8 @@ The review must contain exactly one of each required heading:
    - PR title: the content under `## Title`.
    - PR body: `## summary`, then `### Why`, then `## Findings` with `### LOW`, `### MEDIUM`, and `### HIGH`.
    - Existing open PR into `main`: compare its body with the extracted body and update it through `gh api` only when they differ.
-   - No existing open PR into `main`: run `gh pr create --base main` with the extracted title and body.
+   - Confirmed absence of a pull request for the current branch: run `gh pr create --base main` with the extracted title and body.
+   - Other pull request lookup failures: return the GitHub CLI error and stop without attempting creation.
    - All title and body values are passed as literal arguments.
 3. If the command succeeds, report the pull request URL from its output.
 4. If parsing fails, the command fails, or setup is missing, report its message and stop. Do not retry with other flags or commands.

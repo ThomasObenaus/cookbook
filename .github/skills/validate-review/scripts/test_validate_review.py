@@ -76,9 +76,7 @@ class ValidateReviewTests(unittest.TestCase):
             report().replace("## summary", "## Title\n\nDuplicate\n\n## summary"),
             report() + "\n## Afterword\n",
             report().replace("### Why", "## Why"),
-            report().replace("### LOW", "### MEDIUM", 1).replace(
-                "### MEDIUM\n\nNone.\n\n### HIGH", "### LOW\n\nNone.\n\n### HIGH"
-            ),
+            report().replace("### LOW", "### MEDIUM", 1).replace("### MEDIUM\n\nNone.\n\n### HIGH", "### LOW\n\nNone.\n\n### HIGH"),
         ):
             with self.subTest(invalid=invalid):
                 self.assert_error(invalid, "Expected headings")

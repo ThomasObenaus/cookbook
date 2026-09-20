@@ -204,6 +204,22 @@ class SyncPullRequestTests(unittest.TestCase):
         )
 
     @patch("create_pr.subprocess.run")
+    def test_stops_when_pull_request_lookup_fails(self, run):
+        content = PullRequestContent("Prepare API", "## summary\n\nNew body")
+        lookup_failure = subprocess.CompletedProcess([], 1, "", "HTTP 401: Bad credentials")
+        run.return_value = lookup_failure
+
+        result = sync_pull_request(content)
+
+        self.assertIs(result, lookup_failure)
+        run.assert_called_once_with(
+            ["gh", "pr", "view", "--json", "body,url,baseRefName,state,number"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    @patch("create_pr.subprocess.run")
     def test_leaves_matching_existing_body_unchanged(self, run):
         content = PullRequestContent("Prepare API", "## summary\n\nCurrent body")
         run.return_value = subprocess.CompletedProcess(
