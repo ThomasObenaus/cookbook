@@ -25,7 +25,7 @@ Use the reusable [validator](./scripts/validate_review.py), not custom inline sc
 
 - Requires `# Change Review`, followed by `## LOW`, `## MEDIUM`, `## HIGH`, `## Review Limitations`, `## summary`, and `### Why`, in that order without additional headings. Fenced code does not count as headings or links.
 - Counts whitespace-separated words: summary must contain 1-50 words, excluding Why; Why must contain 1-30 words. Keep both as plain prose.
-- Findings use `- **Title**: description`; empty severity categories use `None.`. Other top-level content is rejected, while indented continuation lines are allowed. Each finding needs an inline local file link with a valid line anchor.
+- Findings use `- **Title**: description`; empty severity categories use `None.`. Other top-level content is rejected, while indented continuation lines are allowed after a finding starts. Each finding needs an inline local file link with a valid line anchor.
 - Supports inline links such as `[file:42](lib/file.dart#L42)`, line ranges, percent-encoded filenames, and angle-bracket destinations for paths containing spaces. Use this report format, not reference-style links or titled link destinations.
 - Checks local targets are files within the report directory tree, including symlink resolution. Anchors must be `#L<number>` or `#L<start>-L<end>` and within actual file lines. A trailing newline does not create an extra line.
 - External HTTP(S) and mail links are not fetched and do not satisfy a finding's code-location requirement.

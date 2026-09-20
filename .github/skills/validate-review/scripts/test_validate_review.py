@@ -118,6 +118,12 @@ class ValidateReviewTests(unittest.TestCase):
             "unexpected content",
         )
 
+    def test_rejects_indented_content_before_first_finding(self):
+        self.assert_error(
+            report(finding="  Orphaned continuation.\n- **Defect**: See [source](source%20file.dart#L1)."),
+            "unexpected content",
+        )
+
     def test_allows_indented_finding_continuation(self):
         result = self.check(report(finding="- **Defect**: Details continue below.\n  See [source](source%20file.dart#L1)."))
         self.assertEqual(result.errors, [])
