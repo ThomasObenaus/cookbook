@@ -1,4 +1,5 @@
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -122,12 +123,59 @@ def create_pull_request(content: PullRequestContent) -> subprocess.CompletedProc
     )
 
 
+def sync_pull_request(content: PullRequestContent) -> subprocess.CompletedProcess[str]:
+    view_result = subprocess.run(
+        ["gh", "pr", "view", "--json", "body,url,baseRefName,state,number"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if view_result.returncode != 0:
+        return create_pull_request(content)
+
+    try:
+        pull_request = json.loads(view_result.stdout)
+        body = pull_request["body"]
+        url = pull_request["url"]
+        base_ref_name = pull_request["baseRefName"]
+        state = pull_request["state"]
+        number = pull_request["number"]
+        if not all(isinstance(value, str) for value in (body, url, base_ref_name, state)) or type(number) is not int or number < 1:
+            raise TypeError
+    except (json.JSONDecodeError, KeyError, TypeError) as error:
+        raise ReviewFormatError("Cannot parse the current pull request returned by GitHub CLI.") from error
+
+    if base_ref_name != "main" or state != "OPEN":
+        return create_pull_request(content)
+    if body == content.body:
+        return subprocess.CompletedProcess(view_result.args, 0, f"{url}\n", "")
+
+    edit_result = subprocess.run(
+        [
+            "gh",
+            "api",
+            "--method",
+            "PATCH",
+            f"repos/{{owner}}/{{repo}}/pulls/{number}",
+            "--raw-field",
+            f"body={content.body}",
+            "--silent",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if edit_result.returncode == 0:
+        return subprocess.CompletedProcess(edit_result.args, 0, f"{url}\n", edit_result.stderr)
+    return edit_result
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Create a GitHub pull request from repository-root REVIEW.md.")
+    parser = argparse.ArgumentParser(description="Create or synchronize a GitHub pull request from repository-root REVIEW.md.")
     parser.parse_args()
     try:
         content = load_review()
-        result = create_pull_request(content)
+        result = sync_pull_request(content)
     except ReviewFormatError as error:
         print(f"FAIL: {error}", file=sys.stderr)
         return 1

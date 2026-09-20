@@ -4,9 +4,9 @@ from contextlib import redirect_stderr
 from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
+from unittest.mock import call, patch
 
-from create_pr import PullRequestContent, ReviewFormatError, create_pull_request, load_review, parse_review
+from create_pr import PullRequestContent, ReviewFormatError, create_pull_request, load_review, parse_review, sync_pull_request
 
 
 def review(
@@ -161,6 +161,100 @@ class CreatePullRequestTests(unittest.TestCase):
 
         self.assertIn("unrecognized arguments: other/REVIEW.md", stderr.getvalue())
         create.assert_not_called()
+
+
+class SyncPullRequestTests(unittest.TestCase):
+    @patch("create_pr.subprocess.run")
+    def test_creates_pull_request_when_current_branch_has_none(self, run):
+        content = PullRequestContent("Prepare API", "## summary\n\nNew body")
+        run.side_effect = (
+            subprocess.CompletedProcess([], 1, "", "no pull requests found"),
+            subprocess.CompletedProcess([], 0, "https://github.com/example/repo/pull/1\n", ""),
+        )
+
+        result = sync_pull_request(content)
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(
+            run.call_args_list,
+            [
+                call(
+                    ["gh", "pr", "view", "--json", "body,url,baseRefName,state,number"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                ),
+                call(
+                    [
+                        "gh",
+                        "pr",
+                        "create",
+                        "--base",
+                        "main",
+                        "--title",
+                        "Prepare API",
+                        "--body",
+                        "## summary\n\nNew body",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                ),
+            ],
+        )
+
+    @patch("create_pr.subprocess.run")
+    def test_leaves_matching_existing_body_unchanged(self, run):
+        content = PullRequestContent("Prepare API", "## summary\n\nCurrent body")
+        run.return_value = subprocess.CompletedProcess(
+            [],
+            0,
+            '{"body":"## summary\\n\\nCurrent body","url":"https://github.com/example/repo/pull/1","baseRefName":"main","state":"OPEN","number":1}',
+            "",
+        )
+
+        result = sync_pull_request(content)
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "https://github.com/example/repo/pull/1\n")
+        self.assertEqual(run.call_count, 1)
+
+    @patch("create_pr.subprocess.run")
+    def test_updates_existing_body_when_review_differs(self, run):
+        content = PullRequestContent("Prepare API", "## summary\n\nUpdated body")
+        url = "https://github.com/example/repo/pull/1"
+        run.side_effect = (
+            subprocess.CompletedProcess(
+                [],
+                0,
+                f'{{"body":"Old body","url":"{url}","baseRefName":"main","state":"OPEN","number":1}}',
+                "",
+            ),
+            subprocess.CompletedProcess([], 0, "", ""),
+        )
+
+        result = sync_pull_request(content)
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, f"{url}\n")
+        self.assertEqual(
+            run.call_args_list[1],
+            call(
+                [
+                    "gh",
+                    "api",
+                    "--method",
+                    "PATCH",
+                    "repos/{owner}/{repo}/pulls/1",
+                    "--raw-field",
+                    f"body={content.body}",
+                    "--silent",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            ),
+        )
 
 
 if __name__ == "__main__":

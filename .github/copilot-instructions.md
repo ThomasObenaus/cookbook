@@ -10,5 +10,6 @@ For implementation and bug-fix requests:
 4. When the requested changes are included in the committed `main...HEAD` diff, load and follow the [review-change prompt](prompts/review-change.prompt.md).
 5. Fix supported `HIGH` findings introduced by the requested changes, then rerun the affected tests and review until no supported `HIGH` findings remain.
 6. Do not fix `LOW` or `MEDIUM` findings unless the user requests it or they block a required `HIGH` fix.
+7. Create/ update a pull request for the pushed changes using the [create-pr skill](skills/create-pr/SKILL.md) for that purpose.
 
 Do not commit changes solely to make the review step available. If the implementation is not included in the committed diff, state that the review prompt cannot inspect it and leave the review step pending.

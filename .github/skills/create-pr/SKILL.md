@@ -1,13 +1,13 @@
 ---
 name: create-pr
-description: "Use when explicitly asked to create, open, or submit a GitHub pull request from the repository-root REVIEW.md for the current branch's committed changes against main."
+description: "Use when explicitly asked to create, open, submit, or synchronize a GitHub pull request from the repository-root REVIEW.md for the current branch's committed changes against main."
 user-invocable: true
 disable-model-invocation: true
 ---
 
 # Create GitHub Pull Request
 
-Create one ready-for-review GitHub pull request from the current branch into `main`. Invoking this skill authorizes that external action.
+Create or synchronize one ready-for-review GitHub pull request from the current branch into `main`. Invoking this skill authorizes creating the pull request or updating its body.
 
 ## Input
 
@@ -63,7 +63,9 @@ The review must contain exactly one of each required heading:
 2. The script validates and extracts the report without invoking a shell:
    - PR title: the content under `## Title`.
    - PR body: `## summary`, then `### Why`, then `## Findings` with `### LOW`, `### MEDIUM`, and `### HIGH`.
-   - GitHub command: `gh pr create --base main` with the extracted title and body passed as literal arguments.
+   - Existing open PR into `main`: compare its body with the extracted body and update it through `gh api` only when they differ.
+   - No existing open PR into `main`: run `gh pr create --base main` with the extracted title and body.
+   - All title and body values are passed as literal arguments.
 3. If the command succeeds, report the pull request URL from its output.
 4. If parsing fails, the command fails, or setup is missing, report its message and stop. Do not retry with other flags or commands.
 
@@ -71,13 +73,14 @@ The review must contain exactly one of each required heading:
 
 - Preserve the extracted section content; do not replace it with `--fill` or rewrite it.
 - Create a ready-for-review pull request, not a draft.
+- When synchronizing an existing pull request, update only its body; do not change its title.
 - Do not commit, push, fetch, switch branches, alter remotes, or modify project files.
 - Do not claim uncommitted changes are included. A pull request contains only commits available from its published head branch.
-- Do not create another pull request when the command reports that one already exists.
+- Do not create another pull request when an open pull request into `main` already exists for the current branch.
 
 ## Testing the Skill
 
-Run the parser and command-construction tests when changing this skill, not when creating a pull request:
+Run the parser, synchronization, and command-construction tests when changing this skill, not when creating or synchronizing a pull request:
 
 ```sh
 python3 -B .github/skills/create-pr/scripts/test_create_pr.py
