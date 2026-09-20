@@ -128,6 +128,13 @@ def validate_review(report_path: str | Path = "REVIEW.md") -> ValidationResult:
         finding_starts = [index for index in range(start, end) if re.match(r"^- \*\*[^*]+\*\*:", visible_lines[index])]
         if not finding_starts:
             result.errors.append(f"{severity}: expected findings in '- **Title**: description' format or 'None.'.")
+        else:
+            for index in range(start, end):
+                line = visible_lines[index]
+                if line.strip() and index not in finding_starts and not line.startswith(("  ", "\t")):
+                    result.errors.append(
+                        f"Line {index + 1}: unexpected content in {severity}; use '- **Title**: description' or indent a continuation."
+                    )
         for finding_index, finding_start in enumerate(finding_starts):
             finding_end = finding_starts[finding_index + 1] if finding_index + 1 < len(finding_starts) else end
             if not any(finding_start <= index < finding_end for index in location_lines):

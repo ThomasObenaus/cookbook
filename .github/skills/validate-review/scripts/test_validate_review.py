@@ -112,6 +112,16 @@ class ValidateReviewTests(unittest.TestCase):
             with self.subTest(target=target):
                 self.assert_error(report(finding=f"- **Defect**: See [source]({target})."), "each finding")
 
+    def test_rejects_stray_content_alongside_valid_finding(self):
+        self.assert_error(
+            report(finding="- **Defect**: See [source](source%20file.dart#L1).\nStray prose."),
+            "unexpected content",
+        )
+
+    def test_allows_indented_finding_continuation(self):
+        result = self.check(report(finding="- **Defect**: Details continue below.\n  See [source](source%20file.dart#L1)."))
+        self.assertEqual(result.errors, [])
+
     def test_fenced_examples_and_external_urls_ignored(self):
         result = self.check(report(limitations="```markdown\n## HIGH\n[missing](missing.dart#L1)\n```\n[docs](https://example.com)"))
         self.assertEqual(result.errors, [])
