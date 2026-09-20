@@ -7,7 +7,7 @@ description: "Use when asked for a branch diff or PR-style diff against main. Ca
 
 ## Outcome
 
-Capture the complete output of `git --no-pager diff main...HEAD` in a line-addressable temporary file. Summarize the changes when requested; do not perform a review unless asked.
+Capture the complete output of `git --no-pager diff main...HEAD` in a line-addressable file under `~/.config/Code/copilot-terminal-output`. Summarize the changes when requested; do not perform a review unless asked.
 
 ## Procedure
 
@@ -19,7 +19,7 @@ Capture the complete output of `git --no-pager diff main...HEAD` in a line-addre
    ```
 
    - Do not add arguments, wrap or chain the command, or use redirection or pipes.
-   - The helper invokes `git --no-pager diff main...HEAD` directly without a shell and writes its stdout to a private operating-system temporary file. Do not run other Git commands for setup, validation, statistics, or error recovery.
+   - The helper invokes `git --no-pager diff main...HEAD` directly without a shell and writes its stdout to a private file under `~/.config/Code/copilot-terminal-output`. Do not run other Git commands for setup, validation, statistics, or error recovery.
 
 3. Check the command's exit result. On failure, report the Git error and stop. Do not fetch, choose a fallback base, or attempt a different command.
 4. Interpret successful status output:
@@ -34,7 +34,7 @@ Capture the complete output of `git --no-pager diff main...HEAD` in a line-addre
 - Main is not refreshed. Do not claim that it matches the remote or invent branch names and commit SHAs not present in the output.
 - Preserve plain Git diff behavior, including repository configuration. Binary contents may be omitted, submodules may show only commit-pointer changes, and Git LFS contents may appear as pointers. Disclose relevant limitations rather than changing the helper or Git arguments.
 - Generating the diff does not run tests or establish correctness.
-- A successful non-empty capture leaves a private patch file in the operating-system temporary directory so it remains available to file-reading tools.
+- A successful non-empty capture leaves a private patch file under `~/.config/Code/copilot-terminal-output` so it remains available to file-reading tools.
 
 ## Safety
 

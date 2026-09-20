@@ -9,6 +9,21 @@ from branch_diff import DIFF_COMMAND, capture_diff
 
 class CaptureDiffTests(unittest.TestCase):
     @patch("branch_diff.subprocess.run")
+    def test_uses_vscode_output_directory_by_default(self, run):
+        def write_diff(command, *, stdout, stderr, check):
+            stdout.write(b"diff content\n")
+            return subprocess.CompletedProcess(command, 0, b"", b"")
+
+        run.side_effect = write_diff
+        with TemporaryDirectory() as directory:
+            output_directory = Path(directory) / ".config" / "Code" / "copilot-terminal-output"
+            with patch("branch_diff.DEFAULT_OUTPUT_DIRECTORY", output_directory):
+                capture = capture_diff()
+
+            self.assertEqual(capture.path.parent, output_directory)
+            self.assertTrue(output_directory.is_dir())
+
+    @patch("branch_diff.subprocess.run")
     def test_preserves_complete_large_diff(self, run):
         payload = b"diff --git a/start b/start\n" + (b"+changed content\n" * 5000) + b"diff --git a/end b/end\n"
 

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 DIFF_COMMAND = ("git", "--no-pager", "diff", "main...HEAD")
+DEFAULT_OUTPUT_DIRECTORY = Path.home() / ".config" / "Code" / "copilot-terminal-output"
 
 
 @dataclass(frozen=True)
@@ -18,6 +19,8 @@ class DiffCapture:
 
 
 def capture_diff(output_directory: Path | None = None) -> DiffCapture:
+    output_directory = output_directory or DEFAULT_OUTPUT_DIRECTORY
+    output_directory.mkdir(parents=True, exist_ok=True)
     output = tempfile.NamedTemporaryFile(
         prefix="copilot-branch-diff-",
         suffix=".patch",
