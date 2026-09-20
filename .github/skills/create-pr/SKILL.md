@@ -2,7 +2,7 @@
 name: create-pr
 description: "Use when explicitly asked to create, open, submit, or synchronize a GitHub pull request from the repository-root REVIEW.md for the current branch's committed changes against main."
 user-invocable: true
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Create GitHub Pull Request
