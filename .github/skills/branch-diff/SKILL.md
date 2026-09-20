@@ -1,13 +1,13 @@
 ---
 name: branch-diff
-description: "Use when asked for a branch diff or PR-style diff against main. Run git diff main...HEAD and summarize the committed changes when requested."
+description: "Use when asked for a branch diff or PR-style diff against main. Run git --no-pager diff main...HEAD and summarize the committed changes when requested."
 ---
 
 # Branch Diff Against Main
 
 ## Outcome
 
-Run `git diff main...HEAD` to show committed changes since divergence from main. Summarize the changes when requested; do not perform a review unless asked.
+Run `git --no-pager diff main...HEAD` to show committed changes since divergence from main. Disable Git's pager so output goes directly to the terminal tool. Summarize the changes when requested; do not perform a review unless asked.
 
 ## Procedure
 
@@ -15,10 +15,10 @@ Run `git diff main...HEAD` to show committed changes since divergence from main.
 2. Run only this Git command from that repository:
 
    ```sh
-   git diff main...HEAD
+   git --no-pager diff main...HEAD
    ```
 
-   - Do not add flags, path filters, alternate refs, or commit SHAs. Do not run other Git commands for setup, validation, statistics, or error recovery.
+   - Keep `--no-pager`; do not add other flags, path filters, alternate refs, or commit SHAs. Do not run other Git commands for setup, validation, statistics, or error recovery.
    - Do not wrap the command in shell scripts, chain it with other commands, use redirection or pipes, or explicitly create temporary files.
 
 3. Check the command's exit result. On failure, report the Git error and stop. Do not fetch, choose a fallback base, or attempt a different command. On success with empty output, report that there are no committed differences in this comparison.
