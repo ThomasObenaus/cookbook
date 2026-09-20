@@ -1,0 +1,230 @@
+import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
+import 'package:flutter/material.dart';
+
+class RecipeDetailScreen extends StatelessWidget {
+  const RecipeDetailScreen({required this.recipe, super.key});
+
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Recipe details')),
+      body: SingleChildScrollView(
+        key: const ValueKey<String>('recipe-detail-scroll-view'),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                AspectRatio(
+                  aspectRatio: 4 / 3,
+                  child: Image.asset(
+                    recipe.imageAssetPath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      final colorScheme = Theme.of(context).colorScheme;
+                      return ColoredBox(
+                        color: colorScheme.surfaceContainerHighest,
+                        child: Icon(
+                          Icons.restaurant,
+                          size: 64,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        recipe.name,
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 20),
+                      _RecipeMetadata(recipe: recipe),
+                      const SizedBox(height: 32),
+                      Text(
+                        'Ingredients',
+                        style: Theme.of(context).textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 12),
+                      for (
+                        var index = 0;
+                        index < recipe.ingredients.length;
+                        index++
+                      )
+                        _IngredientRow(
+                          key: ValueKey<String>('ingredient-$index'),
+                          ingredient: recipe.ingredients[index],
+                        ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Method',
+                        style: Theme.of(context).textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 12),
+                      for (var index = 0; index < recipe.steps.length; index++)
+                        _StepRow(
+                          key: ValueKey<String>('recipe-step-${index + 1}'),
+                          number: index + 1,
+                          instruction: recipe.steps[index],
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RecipeMetadata extends StatelessWidget {
+  const _RecipeMetadata({required this.recipe});
+
+  final Recipe recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = constraints.maxWidth >= 680
+            ? (constraints.maxWidth - 32) / 3
+            : constraints.maxWidth;
+
+        return Wrap(
+          spacing: 16,
+          runSpacing: 12,
+          children: <Widget>[
+            _MetadataItem(
+              width: itemWidth,
+              icon: Icons.people_outline,
+              label: 'Serves ${recipe.servings}',
+            ),
+            _MetadataItem(
+              width: itemWidth,
+              icon: Icons.timer_outlined,
+              label: 'Preparation ${recipe.prepMinutes} min',
+            ),
+            _MetadataItem(
+              width: itemWidth,
+              icon: Icons.local_fire_department_outlined,
+              label: 'Cooking ${recipe.cookMinutes} min',
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _MetadataItem extends StatelessWidget {
+  const _MetadataItem({
+    required this.width,
+    required this.icon,
+    required this.label,
+  });
+
+  final double width;
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: Row(
+        children: <Widget>[
+          Icon(icon, size: 22),
+          const SizedBox(width: 10),
+          Expanded(child: Text(label)),
+        ],
+      ),
+    );
+  }
+}
+
+class _IngredientRow extends StatelessWidget {
+  const _IngredientRow({required this.ingredient, super.key});
+
+  final Ingredient ingredient;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Padding(
+            padding: EdgeInsets.only(top: 7),
+            child: Icon(Icons.circle, size: 8),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(_formatIngredient(ingredient))),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepRow extends StatelessWidget {
+  const _StepRow({required this.number, required this.instruction, super.key});
+
+  final int number;
+  final String instruction;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '$number',
+              style: TextStyle(
+                color: colorScheme.onPrimaryContainer,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(instruction)),
+        ],
+      ),
+    );
+  }
+}
+
+String _formatIngredient(Ingredient ingredient) {
+  final parts = <String?>[ingredient.quantity, ingredient.unit, ingredient.name]
+      .whereType<String>()
+      .map((part) => part.trim())
+      .where((part) => part.isNotEmpty);
+  final ingredientText = parts.join(' ');
+  final note = ingredient.note?.trim();
+
+  return note == null || note.isEmpty
+      ? ingredientText
+      : '$ingredientText ($note)';
+}

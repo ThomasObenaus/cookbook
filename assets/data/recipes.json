@@ -1,0 +1,162 @@
+[
+  {
+    "id": "tomato-basil-pasta",
+    "name": "Tomato Basil Pasta",
+    "servings": 4,
+    "prepMinutes": 10,
+    "cookMinutes": 20,
+    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "ingredients": [
+      { "name": "spaghetti", "quantity": "350", "unit": "g" },
+      { "name": "crushed tomatoes", "quantity": "400", "unit": "g" },
+      { "name": "garlic", "quantity": "2", "unit": "cloves", "note": "minced" },
+      { "name": "fresh basil", "quantity": "1", "unit": "handful", "note": "torn" },
+      { "name": "olive oil", "quantity": "2", "unit": "tbsp" }
+    ],
+    "steps": [
+      "Cook the spaghetti in salted water until al dente.",
+      "Warm the olive oil, add the garlic, then stir in the tomatoes and simmer for 12 minutes.",
+      "Toss the drained spaghetti through the sauce and finish with fresh basil."
+    ]
+  },
+  {
+    "id": "creamy-mushroom-pasta",
+    "name": "Creamy Mushroom Pasta",
+    "servings": 4,
+    "prepMinutes": 10,
+    "cookMinutes": 25,
+    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "ingredients": [
+      { "name": "fettuccine", "quantity": "350", "unit": "g" },
+      { "name": "chestnut mushrooms", "quantity": "300", "unit": "g", "note": "sliced" },
+      { "name": "garlic", "quantity": "2", "unit": "cloves", "note": "minced" },
+      { "name": "double cream", "quantity": "200", "unit": "ml" },
+      { "name": "parmesan", "quantity": "50", "unit": "g", "note": "finely grated" }
+    ],
+    "steps": [
+      "Cook the fettuccine in salted water until al dente, reserving a mug of pasta water.",
+      "Saute the mushrooms until golden, then add the garlic and cook for one minute.",
+      "Stir in the cream and parmesan, loosen with pasta water, and toss with the fettuccine."
+    ]
+  },
+  {
+    "id": "lemon-herb-chicken",
+    "name": "Lemon Herb Chicken",
+    "servings": 4,
+    "prepMinutes": 15,
+    "cookMinutes": 30,
+    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "ingredients": [
+      { "name": "chicken breasts", "quantity": "4" },
+      { "name": "lemon", "quantity": "1", "note": "zested and juiced" },
+      { "name": "garlic", "quantity": "2", "unit": "cloves", "note": "crushed" },
+      { "name": "dried oregano", "quantity": "1", "unit": "tsp" },
+      { "name": "olive oil", "quantity": "2", "unit": "tbsp" }
+    ],
+    "steps": [
+      "Coat the chicken with lemon zest, juice, garlic, oregano, and olive oil.",
+      "Sear the chicken in an ovenproof pan for three minutes on each side.",
+      "Bake at 200 C for 18 to 20 minutes, then rest for five minutes before serving."
+    ]
+  },
+  {
+    "id": "vegetable-fried-rice",
+    "name": "Vegetable Fried Rice",
+    "servings": 4,
+    "prepMinutes": 15,
+    "cookMinutes": 15,
+    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "ingredients": [
+      { "name": "cooked rice", "quantity": "600", "unit": "g", "note": "chilled" },
+      { "name": "carrot", "quantity": "1", "note": "finely diced" },
+      { "name": "frozen peas", "quantity": "120", "unit": "g" },
+      { "name": "eggs", "quantity": "2", "note": "beaten" },
+      { "name": "soy sauce", "quantity": "2", "unit": "tbsp" }
+    ],
+    "steps": [
+      "Stir-fry the carrot and peas over high heat until just tender.",
+      "Push the vegetables aside, scramble the eggs in the pan, then mix everything together.",
+      "Add the chilled rice and soy sauce and stir-fry until piping hot."
+    ]
+  },
+  {
+    "id": "red-lentil-curry",
+    "name": "Red Lentil Curry",
+    "servings": 4,
+    "prepMinutes": 10,
+    "cookMinutes": 30,
+    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "ingredients": [
+      { "name": "red lentils", "quantity": "250", "unit": "g", "note": "rinsed" },
+      { "name": "onion", "quantity": "1", "note": "finely chopped" },
+      { "name": "curry powder", "quantity": "2", "unit": "tbsp" },
+      { "name": "coconut milk", "quantity": "400", "unit": "ml" },
+      { "name": "chopped tomatoes", "quantity": "400", "unit": "g" }
+    ],
+    "steps": [
+      "Soften the onion in a large saucepan, then stir in the curry powder for one minute.",
+      "Add the lentils, coconut milk, tomatoes, and 250 ml of water.",
+      "Simmer for 25 minutes, stirring occasionally, until the lentils are tender."
+    ]
+  },
+  {
+    "id": "banana-oat-pancakes",
+    "name": "Banana Oat Pancakes",
+    "servings": 3,
+    "prepMinutes": 10,
+    "cookMinutes": 15,
+    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "ingredients": [
+      { "name": "ripe bananas", "quantity": "2" },
+      { "name": "rolled oats", "quantity": "120", "unit": "g" },
+      { "name": "eggs", "quantity": "2" },
+      { "name": "milk", "quantity": "80", "unit": "ml" },
+      { "name": "baking powder", "quantity": "1", "unit": "tsp" }
+    ],
+    "steps": [
+      "Blend the bananas, oats, eggs, milk, and baking powder into a smooth batter.",
+      "Heat a lightly oiled frying pan over medium heat.",
+      "Cook small ladlefuls for two minutes per side until golden and cooked through."
+    ]
+  },
+  {
+    "id": "roasted-vegetable-tray-bake",
+    "name": "Roasted Vegetable Tray Bake",
+    "servings": 4,
+    "prepMinutes": 20,
+    "cookMinutes": 40,
+    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "ingredients": [
+      { "name": "sweet potato", "quantity": "1", "note": "cut into chunks" },
+      { "name": "red peppers", "quantity": "2", "note": "sliced" },
+      { "name": "courgettes", "quantity": "2", "note": "cut into chunks" },
+      { "name": "red onion", "quantity": "1", "note": "cut into wedges" },
+      { "name": "olive oil", "quantity": "3", "unit": "tbsp" }
+    ],
+    "steps": [
+      "Heat the oven to 210 C and spread the vegetables over a large roasting tray.",
+      "Drizzle with olive oil, season, and toss until evenly coated.",
+      "Roast for 35 to 40 minutes, turning halfway, until browned and tender."
+    ]
+  },
+  {
+    "id": "apple-crumble",
+    "name": "Apple Crumble",
+    "servings": 6,
+    "prepMinutes": 20,
+    "cookMinutes": 40,
+    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "ingredients": [
+      { "name": "cooking apples", "quantity": "750", "unit": "g", "note": "peeled and sliced" },
+      { "name": "plain flour", "quantity": "180", "unit": "g" },
+      { "name": "cold butter", "quantity": "100", "unit": "g", "note": "cubed" },
+      { "name": "light brown sugar", "quantity": "90", "unit": "g" },
+      { "name": "ground cinnamon", "quantity": "1", "unit": "tsp" }
+    ],
+    "steps": [
+      "Heat the oven to 190 C and arrange the apples in a baking dish with half the sugar and the cinnamon.",
+      "Rub the butter into the flour, then stir in the remaining sugar to make a coarse crumble.",
+      "Scatter the topping over the apples and bake for 35 to 40 minutes until golden and bubbling."
+    ]
+  }
+]
