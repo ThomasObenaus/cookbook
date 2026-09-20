@@ -182,6 +182,16 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
 
     if (_ingredientControllers.isBlank) {
       if (forContinue && _ingredients.isNotEmpty) {
+        if (_editingIngredientIndex != null) {
+          _showIngredientError('Enter an ingredient name');
+          return false;
+        }
+        setState(() {
+          _ingredientEditorVisible = false;
+          _editingIngredientIndex = null;
+          _ingredientNameError = null;
+          _ingredientControllers.clear();
+        });
         return true;
       }
       _showIngredientError(
@@ -290,6 +300,16 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
     final instruction = _preparationController.text.trim();
     if (instruction.isEmpty) {
       if (forContinue && _steps.isNotEmpty) {
+        if (_editingPreparationIndex != null) {
+          _showPreparationError('Enter a preparation step');
+          return false;
+        }
+        setState(() {
+          _preparationEditorVisible = false;
+          _editingPreparationIndex = null;
+          _preparationError = null;
+          _preparationController.clear();
+        });
         return true;
       }
       _showPreparationError(

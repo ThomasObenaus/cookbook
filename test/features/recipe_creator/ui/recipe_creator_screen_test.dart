@@ -257,6 +257,32 @@ void main() {
     await _tap(tester, _addIngredientKey);
     await _tap(tester, _continueKey);
     _expectStage(tester, 'Preparation', 3);
+
+    await _tap(tester, _backKey);
+    expect(find.byKey(_ingredientNameKey), findsNothing);
+    expect(
+      tester
+          .widget<IconButton>(
+            find.byKey(const ValueKey<String>('edit-ingredient-0')),
+          )
+          .onPressed,
+      isNotNull,
+    );
+    expect(
+      tester
+          .widget<IconButton>(
+            find.byKey(const ValueKey<String>('remove-ingredient-0')),
+          )
+          .onPressed,
+      isNotNull,
+    );
+
+    await _tap(tester, const ValueKey<String>('edit-ingredient-0'));
+    await tester.enterText(find.byKey(_ingredientNameKey), '');
+    await tester.enterText(find.byKey(_ingredientQuantityKey), '');
+    await _tap(tester, _continueKey);
+    _expectStage(tester, 'Ingredients', 2);
+    expect(find.text('Enter an ingredient name'), findsOneWidget);
   });
 
   testWidgets('adds, edits, removes, and renumbers one preparation step', (
@@ -301,6 +327,51 @@ void main() {
     await _tap(tester, const ValueKey<String>('remove-preparation-step-0'));
     expect(find.text('Step 1'), findsOneWidget);
     expect(find.byKey(_preparationKey), findsOneWidget);
+  });
+
+  testWidgets('closes a blank new step but validates a blank existing edit', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        RecipeCreatorScreen(
+          repository: _FakeRepository(),
+          imagePicker: _pickerWithImage,
+        ),
+      ),
+    );
+    await _goToPreparation(tester);
+    await tester.enterText(find.byKey(_preparationKey), 'Simmer.');
+    await _tap(tester, _saveStepKey);
+
+    await _tap(tester, _addStepKey);
+    await _tap(tester, _continueKey);
+    _expectStage(tester, 'Review', 4);
+
+    await _tap(tester, const ValueKey<String>('edit-preparation-section'));
+    expect(find.byKey(_preparationKey), findsNothing);
+    expect(
+      tester
+          .widget<IconButton>(
+            find.byKey(const ValueKey<String>('edit-preparation-step-0')),
+          )
+          .onPressed,
+      isNotNull,
+    );
+    expect(
+      tester
+          .widget<IconButton>(
+            find.byKey(const ValueKey<String>('remove-preparation-step-0')),
+          )
+          .onPressed,
+      isNotNull,
+    );
+
+    await _tap(tester, const ValueKey<String>('edit-preparation-step-0'));
+    await tester.enterText(find.byKey(_preparationKey), '');
+    await _tap(tester, _continueKey);
+    _expectStage(tester, 'Preparation', 3);
+    expect(find.text('Enter a preparation step'), findsOneWidget);
   });
 
   testWidgets('reviews ordered content and edits sections before saving', (
