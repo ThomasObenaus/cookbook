@@ -4,7 +4,7 @@
 
 For implementation and bug-fix requests:
 
-1. Implement the requested changes or feature. Implement at max only one change or feature at a time. Don't start automatically on multiple changes or features. Focus on one thing at a time. If you realize you need to make additional changes then add them to the BACKLOG.md.
+1. Implement the requested changes or feature. Implement at max only one change or feature at a time. Don't start automatically on multiple changes or features. Focus on one thing at a time. If you realize you need to make additional changes, which would exceed the current scope, then add them to the BACKLOG.md.
 2. Add or update focused tests for the changed behavior.
 3. Run the relevant tests and checks. Fix failures caused by the implementation and rerun them.
 4. When the requested changes are included in the committed `main...HEAD` diff, load and follow the [review-change prompt](prompts/review-change.prompt.md).
