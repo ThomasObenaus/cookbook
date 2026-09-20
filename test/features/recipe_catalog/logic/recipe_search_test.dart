@@ -1,5 +1,6 @@
 import 'package:cookbook/features/recipe_catalog/logic/recipe_search.dart';
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
+import 'package:cookbook/features/recipe_catalog/models/recipe_image.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -80,7 +81,7 @@ Recipe _recipe({
     servings: 4,
     prepMinutes: 10,
     cookMinutes: 20,
-    imageAssetPath: 'assets/images/recipe_placeholder.png',
+    image: RecipeImage.asset('assets/images/recipe_placeholder.png'),
     ingredients: <Ingredient>[Ingredient(name: ingredient)],
     steps: <String>[step],
   );

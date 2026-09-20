@@ -1,7 +1,10 @@
-import 'package:cookbook/features/recipe_catalog/data/recipe_repository.dart';
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
+import 'package:cookbook/features/recipe_catalog/models/recipe_image.dart';
 import 'package:cookbook/features/recipe_catalog/ui/recipe_catalog_screen.dart';
 import 'package:cookbook/features/recipe_catalog/ui/recipe_detail_screen.dart';
+import 'package:cookbook/features/recipe_creator/data/mutable_recipe_repository.dart';
+import 'package:cookbook/features/recipe_creator/data/recipe_image_picker.dart';
+import 'package:cookbook/features/recipe_creator/models/new_recipe.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -70,6 +73,7 @@ void main() {
       _testApp(
         RecipeCatalogScreen(
           repository: _StaticRepository(<Recipe>[tomatoRecipe, mushroomRecipe]),
+          imagePicker: const _FakePicker(),
         ),
       ),
     );
@@ -116,7 +120,7 @@ Recipe _fullRecipe() {
     servings: 3,
     prepMinutes: 12,
     cookMinutes: 28,
-    imageAssetPath: 'assets/images/recipe_placeholder.png',
+    image: RecipeImage.asset('assets/images/recipe_placeholder.png'),
     ingredients: const <Ingredient>[
       Ingredient(name: 'flour', quantity: '2', unit: 'cups', note: 'sifted'),
       Ingredient(name: 'salt'),
@@ -137,17 +141,29 @@ Recipe _recipe({required String id, required String name}) {
     servings: 4,
     prepMinutes: 10,
     cookMinutes: 25,
-    imageAssetPath: 'assets/images/recipe_placeholder.png',
+    image: RecipeImage.asset('assets/images/recipe_placeholder.png'),
     ingredients: const <Ingredient>[Ingredient(name: 'ingredient')],
     steps: const <String>['Cook the recipe.'],
   );
 }
 
-class _StaticRepository implements RecipeRepository {
+class _StaticRepository implements MutableRecipeRepository {
   _StaticRepository(this.recipes);
 
   final List<Recipe> recipes;
 
   @override
   Future<List<Recipe>> getAllRecipes() async => recipes;
+
+  @override
+  Future<Recipe> createRecipe(NewRecipe recipe) async {
+    throw UnsupportedError('Creation is not used by this test.');
+  }
+}
+
+class _FakePicker implements RecipeImagePicker {
+  const _FakePicker();
+
+  @override
+  Future<String?> pickFromGallery() async => null;
 }

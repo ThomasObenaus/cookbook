@@ -133,7 +133,10 @@ Map<String, Object?> _recipeJson({required String id, required String name}) {
     'servings': 2,
     'prepMinutes': 5,
     'cookMinutes': 10,
-    'imageAssetPath': 'assets/images/recipe_placeholder.png',
+    'image': <String, Object?>{
+      'kind': 'asset',
+      'path': 'assets/images/recipe_placeholder.png',
+    },
     'ingredients': <Object?>[
       <String, Object?>{'name': 'ingredient'},
     ],

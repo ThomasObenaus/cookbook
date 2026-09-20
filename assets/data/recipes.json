@@ -5,7 +5,7 @@
     "servings": 4,
     "prepMinutes": 10,
     "cookMinutes": 20,
-    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "image": { "kind": "asset", "path": "assets/images/recipe_placeholder.png" },
     "ingredients": [
       { "name": "spaghetti", "quantity": "350", "unit": "g" },
       { "name": "crushed tomatoes", "quantity": "400", "unit": "g" },
@@ -25,7 +25,7 @@
     "servings": 4,
     "prepMinutes": 10,
     "cookMinutes": 25,
-    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "image": { "kind": "asset", "path": "assets/images/recipe_placeholder.png" },
     "ingredients": [
       { "name": "fettuccine", "quantity": "350", "unit": "g" },
       { "name": "chestnut mushrooms", "quantity": "300", "unit": "g", "note": "sliced" },
@@ -45,7 +45,7 @@
     "servings": 4,
     "prepMinutes": 15,
     "cookMinutes": 30,
-    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "image": { "kind": "asset", "path": "assets/images/recipe_placeholder.png" },
     "ingredients": [
       { "name": "chicken breasts", "quantity": "4" },
       { "name": "lemon", "quantity": "1", "note": "zested and juiced" },
@@ -65,7 +65,7 @@
     "servings": 4,
     "prepMinutes": 15,
     "cookMinutes": 15,
-    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "image": { "kind": "asset", "path": "assets/images/recipe_placeholder.png" },
     "ingredients": [
       { "name": "cooked rice", "quantity": "600", "unit": "g", "note": "chilled" },
       { "name": "carrot", "quantity": "1", "note": "finely diced" },
@@ -85,7 +85,7 @@
     "servings": 4,
     "prepMinutes": 10,
     "cookMinutes": 30,
-    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "image": { "kind": "asset", "path": "assets/images/recipe_placeholder.png" },
     "ingredients": [
       { "name": "red lentils", "quantity": "250", "unit": "g", "note": "rinsed" },
       { "name": "onion", "quantity": "1", "note": "finely chopped" },
@@ -105,7 +105,7 @@
     "servings": 3,
     "prepMinutes": 10,
     "cookMinutes": 15,
-    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "image": { "kind": "asset", "path": "assets/images/recipe_placeholder.png" },
     "ingredients": [
       { "name": "ripe bananas", "quantity": "2" },
       { "name": "rolled oats", "quantity": "120", "unit": "g" },
@@ -125,7 +125,7 @@
     "servings": 4,
     "prepMinutes": 20,
     "cookMinutes": 40,
-    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "image": { "kind": "asset", "path": "assets/images/recipe_placeholder.png" },
     "ingredients": [
       { "name": "sweet potato", "quantity": "1", "note": "cut into chunks" },
       { "name": "red peppers", "quantity": "2", "note": "sliced" },
@@ -145,7 +145,7 @@
     "servings": 6,
     "prepMinutes": 20,
     "cookMinutes": 40,
-    "imageAssetPath": "assets/images/recipe_placeholder.png",
+    "image": { "kind": "asset", "path": "assets/images/recipe_placeholder.png" },
     "ingredients": [
       { "name": "cooking apples", "quantity": "750", "unit": "g", "note": "peeled and sliced" },
       { "name": "plain flour", "quantity": "180", "unit": "g" },

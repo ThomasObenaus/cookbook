@@ -1,5 +1,7 @@
 import 'dart:collection';
 
+import 'package:cookbook/features/recipe_catalog/models/recipe_image.dart';
+
 class Ingredient {
   const Ingredient({required this.name, this.quantity, this.unit, this.note});
 
@@ -18,6 +20,13 @@ class Ingredient {
   final String? quantity;
   final String? unit;
   final String? note;
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'name': name,
+    if (quantity != null) 'quantity': quantity,
+    if (unit != null) 'unit': unit,
+    if (note != null) 'note': note,
+  };
 }
 
 class Recipe {
@@ -27,7 +36,7 @@ class Recipe {
     required this.servings,
     required this.prepMinutes,
     required this.cookMinutes,
-    required this.imageAssetPath,
+    required this.image,
     required List<Ingredient> ingredients,
     required List<String> steps,
   }) : ingredients = UnmodifiableListView(List<Ingredient>.of(ingredients)),
@@ -75,7 +84,7 @@ class Recipe {
       servings: _requiredInt(values, 'servings', 'Recipe', minimum: 1),
       prepMinutes: _requiredInt(values, 'prepMinutes', 'Recipe', minimum: 0),
       cookMinutes: _requiredInt(values, 'cookMinutes', 'Recipe', minimum: 0),
-      imageAssetPath: _requiredString(values, 'imageAssetPath', 'Recipe'),
+      image: RecipeImage.fromJson(values['image']),
       ingredients: ingredients,
       steps: steps,
     );
@@ -86,11 +95,24 @@ class Recipe {
   final int servings;
   final int prepMinutes;
   final int cookMinutes;
-  final String imageAssetPath;
+  final RecipeImage image;
   final List<Ingredient> ingredients;
   final List<String> steps;
 
   int get totalMinutes => prepMinutes + cookMinutes;
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'id': id,
+    'name': name,
+    'servings': servings,
+    'prepMinutes': prepMinutes,
+    'cookMinutes': cookMinutes,
+    'image': image.toJson(),
+    'ingredients': ingredients
+        .map((ingredient) => ingredient.toJson())
+        .toList(growable: false),
+    'steps': List<String>.of(steps, growable: false),
+  };
 }
 
 Map<String, Object?> _objectMap(Object? value, String context) {

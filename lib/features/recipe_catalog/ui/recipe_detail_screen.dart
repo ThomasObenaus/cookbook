@@ -1,4 +1,5 @@
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
+import 'package:cookbook/features/recipe_catalog/ui/recipe_image_view.dart';
 import 'package:flutter/material.dart';
 
 class RecipeDetailScreen extends StatelessWidget {
@@ -20,20 +21,11 @@ class RecipeDetailScreen extends StatelessWidget {
               children: <Widget>[
                 AspectRatio(
                   aspectRatio: 4 / 3,
-                  child: Image.asset(
-                    recipe.imageAssetPath,
+                  child: RecipeImageView(
+                    key: const ValueKey<String>('recipe-detail-image'),
+                    image: recipe.image,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      final colorScheme = Theme.of(context).colorScheme;
-                      return ColoredBox(
-                        color: colorScheme.surfaceContainerHighest,
-                        child: Icon(
-                          Icons.restaurant,
-                          size: 64,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      );
-                    },
+                    fallbackIconSize: 64,
                   ),
                 ),
                 Padding(

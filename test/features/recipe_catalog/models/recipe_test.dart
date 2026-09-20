@@ -1,4 +1,5 @@
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
+import 'package:cookbook/features/recipe_catalog/models/recipe_image.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -15,6 +16,12 @@ void main() {
       expect(ingredient.quantity, '250');
       expect(ingredient.unit, 'g');
       expect(ingredient.note, 'sliced');
+      expect(ingredient.toJson(), <String, Object?>{
+        'name': 'mushrooms',
+        'quantity': '250',
+        'unit': 'g',
+        'note': 'sliced',
+      });
     });
 
     test('allows omitted optional fields', () {
@@ -65,9 +72,11 @@ void main() {
       expect(recipe.prepMinutes, 10);
       expect(recipe.cookMinutes, 20);
       expect(recipe.totalMinutes, 30);
-      expect(recipe.imageAssetPath, 'assets/images/recipe_placeholder.png');
+      expect(recipe.image.kind, RecipeImageKind.asset);
+      expect(recipe.image.path, 'assets/images/recipe_placeholder.png');
       expect(recipe.ingredients.single.name, 'mushrooms');
       expect(recipe.steps, <String>['Slice mushrooms', 'Cook pasta']);
+      expect(recipe.toJson(), _validRecipeJson());
     });
 
     test('copies parsed collections into immutable lists', () {
@@ -97,7 +106,7 @@ void main() {
         servings: 1,
         prepMinutes: 0,
         cookMinutes: 0,
-        imageAssetPath: 'assets/images/recipe_placeholder.png',
+        image: RecipeImage.asset('assets/images/recipe_placeholder.png'),
         ingredients: ingredients,
         steps: steps,
       );
@@ -121,7 +130,7 @@ void main() {
         'servings',
         'prepMinutes',
         'cookMinutes',
-        'imageAssetPath',
+        'image',
         'ingredients',
         'steps',
       ]) {
@@ -142,7 +151,7 @@ void main() {
         'servings': '4',
         'prepMinutes': 1.5,
         'cookMinutes': null,
-        'imageAssetPath': <Object?>[],
+        'image': <Object?>[],
         'ingredients': 'mushrooms',
         'steps': <String, String>{'first': 'Cook'},
       };
@@ -159,13 +168,43 @@ void main() {
     });
 
     test('rejects empty required strings', () {
-      for (final field in <String>['id', 'name', 'imageAssetPath']) {
+      for (final field in <String>['id', 'name']) {
         final json = _validRecipeJson()..[field] = '   ';
 
         expect(
           () => Recipe.fromJson(json),
           throwsFormatException,
           reason: field,
+        );
+      }
+    });
+
+    test('parses local file images', () {
+      final json = _validRecipeJson()
+        ..['image'] = <String, Object?>{
+          'kind': 'file',
+          'path': ' /data/user/recipe.jpg ',
+        };
+
+      final recipe = Recipe.fromJson(json);
+
+      expect(recipe.image.kind, RecipeImageKind.file);
+      expect(recipe.image.path, '/data/user/recipe.jpg');
+    });
+
+    test('rejects malformed recipe images', () {
+      for (final image in <Object?>[
+        null,
+        'asset.png',
+        <String, Object?>{'kind': 'remote', 'path': 'image.jpg'},
+        <String, Object?>{'kind': 'asset', 'path': '   '},
+      ]) {
+        final json = _validRecipeJson()..['image'] = image;
+
+        expect(
+          () => Recipe.fromJson(json),
+          throwsFormatException,
+          reason: '$image',
         );
       }
     });
@@ -230,7 +269,10 @@ Map<String, Object?> _validRecipeJson() {
     'servings': 4,
     'prepMinutes': 10,
     'cookMinutes': 20,
-    'imageAssetPath': 'assets/images/recipe_placeholder.png',
+    'image': <String, Object?>{
+      'kind': 'asset',
+      'path': 'assets/images/recipe_placeholder.png',
+    },
     'ingredients': <Object?>[
       <String, Object?>{'name': 'mushrooms', 'quantity': '250', 'unit': 'g'},
     ],
