@@ -1,4 +1,5 @@
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
+import 'package:cookbook/features/recipe_catalog/ui/recipe_image_view.dart';
 import 'package:flutter/material.dart';
 
 class RecipeCard extends StatelessWidget {
@@ -9,8 +10,6 @@ class RecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Semantics(
       button: true,
       onTap: onTap,
@@ -29,22 +28,12 @@ class RecipeCard extends StatelessWidget {
               children: <Widget>[
                 AspectRatio(
                   aspectRatio: 4 / 3,
-                  child: Image.asset(
-                    recipe.imageAssetPath,
+                  child: RecipeImageView(
+                    image: recipe.image,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return ColoredBox(
-                        key: ValueKey<String>(
-                          'recipe-image-fallback-${recipe.id}',
-                        ),
-                        color: colorScheme.surfaceContainerHighest,
-                        child: Icon(
-                          Icons.restaurant,
-                          size: 44,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      );
-                    },
+                    fallbackKey: ValueKey<String>(
+                      'recipe-image-fallback-${recipe.id}',
+                    ),
                   ),
                 ),
                 Expanded(

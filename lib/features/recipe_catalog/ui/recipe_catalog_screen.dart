@@ -3,12 +3,20 @@ import 'package:cookbook/features/recipe_catalog/logic/recipe_search.dart';
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
 import 'package:cookbook/features/recipe_catalog/ui/recipe_card.dart';
 import 'package:cookbook/features/recipe_catalog/ui/recipe_detail_screen.dart';
+import 'package:cookbook/features/recipe_creator/data/mutable_recipe_repository.dart';
+import 'package:cookbook/features/recipe_creator/data/recipe_image_picker.dart';
+import 'package:cookbook/features/recipe_creator/ui/recipe_creator_screen.dart';
 import 'package:flutter/material.dart';
 
 class RecipeCatalogScreen extends StatefulWidget {
-  const RecipeCatalogScreen({required this.repository, super.key});
+  const RecipeCatalogScreen({
+    required this.repository,
+    required this.imagePicker,
+    super.key,
+  });
 
-  final RecipeRepository repository;
+  final MutableRecipeRepository repository;
+  final RecipeImagePicker imagePicker;
 
   @override
   State<RecipeCatalogScreen> createState() => _RecipeCatalogScreenState();
@@ -93,10 +101,42 @@ class _RecipeCatalogScreenState extends State<RecipeCatalogScreen> {
     );
   }
 
+  Future<void> _openCreator() async {
+    final recipe = await Navigator.of(context).push<Recipe>(
+      MaterialPageRoute<Recipe>(
+        builder: (context) => RecipeCreatorScreen(
+          repository: widget.repository,
+          imagePicker: widget.imagePicker,
+        ),
+      ),
+    );
+    if (!mounted || recipe == null) {
+      return;
+    }
+
+    _searchController.clear();
+    setState(() {
+      _query = '';
+      _status = _CatalogStatus.loading;
+      _errorMessage = '';
+    });
+    await _loadRecipes();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Recipes')),
+      appBar: AppBar(
+        title: const Text('Recipes'),
+        actions: <Widget>[
+          IconButton(
+            key: const ValueKey<String>('create-recipe-action'),
+            onPressed: _openCreator,
+            tooltip: 'Create recipe',
+            icon: const Icon(Icons.add),
+          ),
+        ],
+      ),
       body: switch (_status) {
         _CatalogStatus.loading => const _LoadingState(),
         _CatalogStatus.failure => _FailureState(

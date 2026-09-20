@@ -14,7 +14,10 @@ void main() {
     expect(decoded, hasLength(8));
     for (final value in decoded) {
       final recipe = value! as Map<String, Object?>;
-      expect(recipe['imageAssetPath'], 'assets/images/recipe_placeholder.png');
+      expect(recipe['image'], <String, Object?>{
+        'kind': 'asset',
+        'path': 'assets/images/recipe_placeholder.png',
+      });
     }
 
     final imageData = await rootBundle.load(

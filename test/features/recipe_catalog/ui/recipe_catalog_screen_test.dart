@@ -1,10 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui' show SemanticsAction;
 
 import 'package:cookbook/features/recipe_catalog/data/recipe_repository.dart';
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
+import 'package:cookbook/features/recipe_catalog/models/recipe_image.dart';
 import 'package:cookbook/features/recipe_catalog/ui/recipe_card.dart';
 import 'package:cookbook/features/recipe_catalog/ui/recipe_catalog_screen.dart';
+import 'package:cookbook/features/recipe_catalog/ui/recipe_detail_screen.dart';
+import 'package:cookbook/features/recipe_creator/data/mutable_recipe_repository.dart';
+import 'package:cookbook/features/recipe_creator/data/recipe_image_picker.dart';
+import 'package:cookbook/features/recipe_creator/models/new_recipe.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,7 +19,12 @@ void main() {
     final completer = Completer<List<Recipe>>();
 
     await tester.pumpWidget(
-      _testApp(RecipeCatalogScreen(repository: _PendingRepository(completer))),
+      _testApp(
+        RecipeCatalogScreen(
+          repository: _PendingRepository(completer),
+          imagePicker: const _FakePicker(),
+        ),
+      ),
     );
 
     expect(
@@ -29,7 +40,12 @@ void main() {
     ]);
 
     await tester.pumpWidget(
-      _testApp(RecipeCatalogScreen(repository: repository)),
+      _testApp(
+        RecipeCatalogScreen(
+          repository: repository,
+          imagePicker: const _FakePicker(),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -45,7 +61,12 @@ void main() {
 
   testWidgets('shows an empty-catalogue state', (tester) async {
     await tester.pumpWidget(
-      _testApp(RecipeCatalogScreen(repository: _StaticRepository(const []))),
+      _testApp(
+        RecipeCatalogScreen(
+          repository: _StaticRepository(const []),
+          imagePicker: const _FakePicker(),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -62,7 +83,12 @@ void main() {
     ]);
 
     await tester.pumpWidget(
-      _testApp(RecipeCatalogScreen(repository: repository)),
+      _testApp(
+        RecipeCatalogScreen(
+          repository: repository,
+          imagePicker: const _FakePicker(),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -90,6 +116,7 @@ void main() {
             _recipe(id: 'tomato', name: 'Tomato Basil Pasta'),
             _recipe(id: 'mushroom', name: 'Creamy Mushroom Pasta'),
           ]),
+          imagePicker: const _FakePicker(),
         ),
       ),
     );
@@ -120,6 +147,7 @@ void main() {
           repository: _StaticRepository(<Recipe>[
             _recipe(id: 'mushroom', name: 'Creamy Mushroom Pasta'),
           ]),
+          imagePicker: const _FakePicker(),
         ),
       ),
     );
@@ -137,6 +165,114 @@ void main() {
     );
     expect(find.text('No recipes found'), findsOneWidget);
     expect(find.text('No recipe names match "risotto".'), findsOneWidget);
+  });
+
+  testWidgets('creator cancellation preserves the catalogue query', (
+    tester,
+  ) async {
+    final repository = _CreatingRepository(<Recipe>[
+      _recipe(id: 'mushroom', name: 'Creamy Mushroom Pasta'),
+      _recipe(id: 'tomato', name: 'Tomato Basil Pasta'),
+    ]);
+    await tester.pumpWidget(
+      _testApp(
+        RecipeCatalogScreen(
+          repository: repository,
+          imagePicker: const _FakePicker(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final searchField = find.byKey(
+      const ValueKey<String>('recipe-search-field'),
+    );
+    await tester.enterText(searchField, 'mushroom');
+
+    await tester.tap(find.byTooltip('Create recipe'));
+    await tester.pumpAndSettle();
+    expect(find.text('Create recipe'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+
+    expect(repository.readCount, 1);
+    expect(tester.widget<TextField>(searchField).controller?.text, 'mushroom');
+    expect(find.text('Creamy Mushroom Pasta'), findsOneWidget);
+    expect(find.text('Tomato Basil Pasta'), findsNothing);
+  });
+
+  testWidgets('successful creation clears search, reloads, and opens details', (
+    tester,
+  ) async {
+    final repository = _CreatingRepository(<Recipe>[
+      _recipe(id: 'mushroom', name: 'Creamy Mushroom Pasta'),
+      _recipe(id: 'tomato', name: 'Tomato Basil Pasta'),
+    ]);
+    final imagePath = File('assets/images/recipe_placeholder.png')
+        .absolute
+        .path;
+    await tester.pumpWidget(
+      _testApp(
+        RecipeCatalogScreen(
+          repository: repository,
+          imagePicker: _FakePicker(imagePath),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final searchField = find.byKey(
+      const ValueKey<String>('recipe-search-field'),
+    );
+    await tester.enterText(searchField, 'mushroom');
+
+    await _createRecipe(tester, title: 'Family Soup');
+
+    expect(repository.readCount, 2);
+    expect(tester.widget<TextField>(searchField).controller?.text, isEmpty);
+    expect(find.text('Family Soup'), findsOneWidget);
+    expect(find.text('Tomato Basil Pasta'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('recipe-card-created-recipe')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RecipeDetailScreen), findsOneWidget);
+    expect(find.text('1 cup carrots'), findsOneWidget);
+    expect(find.text('Chop the carrots.'), findsOneWidget);
+    expect(find.text('Preparation 0 min'), findsOneWidget);
+    expect(find.text('Cooking 0 min'), findsOneWidget);
+  });
+
+  testWidgets('shows the recoverable error state when post-save reload fails', (
+    tester,
+  ) async {
+    final repository = _CreatingRepository(<Recipe>[
+      _recipe(id: 'mushroom', name: 'Creamy Mushroom Pasta'),
+    ], failReloadAfterCreation: true);
+    final imagePath = File('assets/images/recipe_placeholder.png')
+        .absolute
+        .path;
+    await tester.pumpWidget(
+      _testApp(
+        RecipeCatalogScreen(
+          repository: repository,
+          imagePicker: _FakePicker(imagePath),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await _createRecipe(tester, title: 'Family Soup');
+
+    expect(
+      find.byKey(const ValueKey<String>('recipe-error-state')),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Recipes could not be loaded. Please try again.'),
+      findsOneWidget,
+    );
   });
 
   for (final width in <double>[320, 412]) {
@@ -159,7 +295,12 @@ void main() {
         );
 
         await tester.pumpWidget(
-          _testApp(RecipeCatalogScreen(repository: _StaticRepository(recipes))),
+          _testApp(
+            RecipeCatalogScreen(
+              repository: _StaticRepository(recipes),
+              imagePicker: const _FakePicker(),
+            ),
+          ),
         );
         await tester.pumpAndSettle();
 
@@ -190,7 +331,12 @@ void main() {
     );
 
     await tester.pumpWidget(
-      _testApp(RecipeCatalogScreen(repository: _StaticRepository(recipes))),
+      _testApp(
+        RecipeCatalogScreen(
+          repository: _StaticRepository(recipes),
+          imagePicker: const _FakePicker(),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -217,6 +363,7 @@ void main() {
           repository: _StaticRepository(<Recipe>[
             _recipe(id: 'mushroom', name: 'Creamy Mushroom Pasta'),
           ]),
+          imagePicker: const _FakePicker(),
         ),
       ),
     );
@@ -242,6 +389,7 @@ void main() {
           repository: _StaticRepository(<Recipe>[
             _recipe(id: 'mushroom', name: 'Creamy Mushroom Pasta'),
           ]),
+          imagePicker: const _FakePicker(),
         ),
       ),
     );
@@ -274,9 +422,10 @@ void main() {
             _recipe(
               id: 'missing-image',
               name: 'Missing Image Recipe',
-              imageAssetPath: 'assets/images/does_not_exist.png',
+              image: RecipeImage.asset('assets/images/does_not_exist.png'),
             ),
           ]),
+          imagePicker: const _FakePicker(),
         ),
       ),
     );
@@ -299,18 +448,48 @@ Widget _testApp(Widget home) {
   );
 }
 
-Recipe _recipe({
-  required String id,
-  required String name,
-  String imageAssetPath = 'assets/images/recipe_placeholder.png',
-}) {
+Future<void> _createRecipe(WidgetTester tester, {required String title}) async {
+  await tester.tap(find.byTooltip('Create recipe'));
+  await tester.pumpAndSettle();
+
+  final chooseImage = find.byKey(const ValueKey<String>('choose-recipe-image'));
+  await tester.ensureVisible(chooseImage);
+  await tester.tap(chooseImage);
+  await tester.pumpAndSettle();
+
+  final titleField = find.byKey(const ValueKey<String>('recipe-title-field'));
+  await tester.ensureVisible(titleField);
+  await tester.enterText(titleField, title);
+
+  final ingredientName = find.byKey(
+    const ValueKey<String>('ingredient-name-0'),
+  );
+  await tester.ensureVisible(ingredientName);
+  await tester.enterText(ingredientName, 'carrots');
+  await tester.enterText(
+    find.byKey(const ValueKey<String>('ingredient-quantity-0')),
+    '1',
+  );
+  await tester.enterText(
+    find.byKey(const ValueKey<String>('ingredient-unit-0')),
+    'cup',
+  );
+
+  final steps = find.byKey(const ValueKey<String>('recipe-steps-field'));
+  await tester.ensureVisible(steps);
+  await tester.enterText(steps, 'Chop the carrots.\nCook until tender.');
+  await tester.tap(find.byTooltip('Save recipe'));
+  await tester.pumpAndSettle();
+}
+
+Recipe _recipe({required String id, required String name, RecipeImage? image}) {
   return Recipe(
     id: id,
     name: name,
     servings: 4,
     prepMinutes: 10,
     cookMinutes: 25,
-    imageAssetPath: imageAssetPath,
+    image: image ?? RecipeImage.asset('assets/images/recipe_placeholder.png'),
     ingredients: const <Ingredient>[
       Ingredient(name: 'ingredient', quantity: '1', unit: 'cup'),
     ],
@@ -318,7 +497,14 @@ Recipe _recipe({
   );
 }
 
-class _StaticRepository implements RecipeRepository {
+abstract class _ReadOnlyMutableRepository implements MutableRecipeRepository {
+  @override
+  Future<Recipe> createRecipe(NewRecipe recipe) async {
+    throw UnsupportedError('Creation is not used by this test.');
+  }
+}
+
+class _StaticRepository extends _ReadOnlyMutableRepository {
   _StaticRepository(this.recipes);
 
   final List<Recipe> recipes;
@@ -331,7 +517,7 @@ class _StaticRepository implements RecipeRepository {
   }
 }
 
-class _PendingRepository implements RecipeRepository {
+class _PendingRepository extends _ReadOnlyMutableRepository {
   _PendingRepository(this.completer);
 
   final Completer<List<Recipe>> completer;
@@ -340,7 +526,7 @@ class _PendingRepository implements RecipeRepository {
   Future<List<Recipe>> getAllRecipes() => completer.future;
 }
 
-class _FailThenSucceedRepository implements RecipeRepository {
+class _FailThenSucceedRepository extends _ReadOnlyMutableRepository {
   _FailThenSucceedRepository(this.recipes);
 
   final List<Recipe> recipes;
@@ -357,5 +543,56 @@ class _FailThenSucceedRepository implements RecipeRepository {
       );
     }
     return recipes;
+  }
+}
+
+class _FakePicker implements RecipeImagePicker {
+  const _FakePicker([this.path]);
+
+  final String? path;
+
+  @override
+  Future<String?> pickFromGallery() async => path;
+}
+
+class _CreatingRepository implements MutableRecipeRepository {
+  _CreatingRepository(
+    List<Recipe> recipes, {
+    this.failReloadAfterCreation = false,
+  }) : _recipes = List<Recipe>.of(recipes);
+
+  final List<Recipe> _recipes;
+  final bool failReloadAfterCreation;
+  int readCount = 0;
+  bool _hasCreatedRecipe = false;
+
+  @override
+  Future<List<Recipe>> getAllRecipes() async {
+    readCount++;
+    if (_hasCreatedRecipe && failReloadAfterCreation) {
+      throw RecipeRepositoryException(
+        message: 'Recipes could not be loaded. Please try again.',
+        cause: const FormatException('Reload failed.'),
+        stackTrace: StackTrace.current,
+      );
+    }
+    return List<Recipe>.unmodifiable(_recipes);
+  }
+
+  @override
+  Future<Recipe> createRecipe(NewRecipe newRecipe) async {
+    final recipe = Recipe(
+      id: 'created-recipe',
+      name: newRecipe.name,
+      servings: 4,
+      prepMinutes: 0,
+      cookMinutes: 0,
+      image: RecipeImage.file(newRecipe.sourceImagePath),
+      ingredients: newRecipe.ingredients,
+      steps: newRecipe.steps,
+    );
+    _recipes.insert(0, recipe);
+    _hasCreatedRecipe = true;
+    return recipe;
   }
 }
