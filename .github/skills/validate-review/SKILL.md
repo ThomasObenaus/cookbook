@@ -1,6 +1,6 @@
 ---
 name: validate-review
-description: "Use when validating a generated REVIEW.md report: check headings, LOW/MEDIUM/HIGH order, summary and Why word limits, and local file links with line numbers."
+description: "Use when validating a generated REVIEW.md report: check the PR-ready headings and title, LOW/MEDIUM/HIGH order, summary and Why word limits, and local file links with line numbers."
 argument-hint: "Optional path to REVIEW.md"
 ---
 
@@ -23,7 +23,7 @@ Use the reusable [validator](./scripts/validate_review.py), not custom inline sc
 
 ## Contract
 
-- Requires `# Change Review`, followed by `## LOW`, `## MEDIUM`, `## HIGH`, `## Review Limitations`, `## summary`, and `### Why`, in that order without additional headings. Fenced code does not count as headings or links.
+- Requires `## Findings`, followed by `### LOW`, `### MEDIUM`, `### HIGH`, `## Title`, `## summary`, and `### Why`, in that order without additional headings. `Title` must contain exactly one non-empty line. Fenced code does not count as headings or links.
 - Counts whitespace-separated words: summary must contain 1-50 words, excluding Why; Why must contain 1-30 words. Keep both as plain prose.
 - Findings use `- **Title**: description`; empty severity categories use `None.`. Other top-level content is rejected, while indented continuation lines are allowed after a finding starts. Each finding needs an inline local file link with a valid line anchor.
 - Supports inline links such as `[file:42](lib/file.dart#L42)`, line ranges, percent-encoded filenames, and angle-bracket destinations for paths containing spaces. Use this report format, not reference-style links or titled link destinations.

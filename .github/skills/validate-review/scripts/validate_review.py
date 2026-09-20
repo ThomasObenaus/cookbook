@@ -5,7 +5,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import unquote
 
-EXPECTED_SECTIONS = ("LOW", "MEDIUM", "HIGH", "Review Limitations", "summary")
+SEVERITIES = ("LOW", "MEDIUM", "HIGH")
+EXPECTED_HEADINGS = (
+    (2, "Findings"),
+    *((3, severity) for severity in SEVERITIES),
+    (2, "Title"),
+    (2, "summary"),
+    (3, "Why"),
+)
 
 
 @dataclass
@@ -48,13 +55,23 @@ def validate_review(report_path: str | Path = "REVIEW.md") -> ValidationResult:
     if fence is not None:
         result.errors.append("Unclosed fenced code block.")
 
-    expected_headings = [(1, "Change Review")]
-    expected_headings.extend((2, title) for title in EXPECTED_SECTIONS)
-    expected_headings.append((3, "Why"))
-    if [(level, title) for level, title, _ in headings] != expected_headings:
+    if [(level, title) for level, title, _ in headings] != list(EXPECTED_HEADINGS):
         result.errors.append(
-            "Expected headings: # Change Review; ## LOW; ## MEDIUM; ## HIGH; ## Review Limitations; ## summary; ### Why, in that order."
+            "Expected headings: ## Findings; ### LOW; ### MEDIUM; ### HIGH; "
+            "## Title; ## summary; ### Why, in that order."
         )
+
+    title_index = next(
+        (index for level, title, index in headings if (level, title) == (2, "Title")),
+        None,
+    )
+    title_end = next(
+        (index for level, _, index in headings if title_index is not None and index > title_index and level <= 2),
+        len(lines),
+    )
+    title_lines = [line.strip() for line in lines[(title_index + 1 if title_index is not None else 0) : title_end] if line.strip()]
+    if title_index is None or len(title_lines) != 1:
+        result.errors.append("Title must contain exactly one non-empty line.")
 
     summary_index = next(
         (index for level, title, index in headings if (level, title) == (2, "summary")),
@@ -114,9 +131,9 @@ def validate_review(report_path: str | Path = "REVIEW.md") -> ValidationResult:
             except (OSError, ValueError, RuntimeError) as error:
                 result.errors.append(f"Line {index + 1}: invalid link {target}: {error}")
 
-    for severity in EXPECTED_SECTIONS[:3]:
+    for severity in SEVERITIES:
         heading_index = next(
-            (index for index, (level, title, _) in enumerate(headings) if (level, title) == (2, severity)),
+            (index for index, (level, title, _) in enumerate(headings) if (level, title) == (3, severity)),
             None,
         )
         if heading_index is None:

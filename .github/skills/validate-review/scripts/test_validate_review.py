@@ -9,27 +9,27 @@ from validate_review import validate_review
 
 def report(
     finding: str = "None.",
+    title: str = "Prepare API",
     summary: str = "Changes the behavior.",
     why: str = "Fixes a regression.",
-    limitations: str = "Tests not run.",
 ) -> str:
-    return f"""# Change Review
+    return f"""## Findings
 
-## LOW
+### LOW
 
 {finding}
 
-## MEDIUM
+### MEDIUM
 
 None.
 
-## HIGH
+### HIGH
 
 None.
 
-## Review Limitations
+## Title
 
-{limitations}
+{title}
 
 ## summary
 
@@ -71,15 +71,26 @@ class ValidateReviewTests(unittest.TestCase):
 
     def test_missing_reordered_duplicate_and_extra_headings(self):
         for invalid in (
-            report().replace("## LOW", "## HIGH"),
-            report().replace("## MEDIUM", ""),
-            report().replace("## summary", "## HIGH\n\n## summary"),
+            report().replace("## Findings", "## Other"),
+            report().replace("### MEDIUM", ""),
+            report().replace("## summary", "## Title\n\nDuplicate\n\n## summary"),
             report() + "\n## Afterword\n",
             report().replace("### Why", "## Why"),
-            report().replace("## LOW", "## MEDIUM", 1).replace("## MEDIUM\n\nNone.\n\n## HIGH", "## LOW\n\nNone.\n\n## HIGH"),
+            report().replace("### LOW", "### MEDIUM", 1).replace(
+                "### MEDIUM\n\nNone.\n\n### HIGH", "### LOW\n\nNone.\n\n### HIGH"
+            ),
         ):
             with self.subTest(invalid=invalid):
                 self.assert_error(invalid, "Expected headings")
+
+    def test_missing_empty_and_multiline_title(self):
+        for invalid in (
+            report().replace("## Title\n\nPrepare API\n\n", ""),
+            report(title=""),
+            report(title="First line\nSecond line"),
+        ):
+            with self.subTest(invalid=invalid):
+                self.assert_error(invalid, "Title must contain exactly one non-empty line")
 
     def test_missing_or_overlong_summary_and_why(self):
         for invalid in (
@@ -129,7 +140,9 @@ class ValidateReviewTests(unittest.TestCase):
         self.assertEqual(result.errors, [])
 
     def test_fenced_examples_and_external_urls_ignored(self):
-        result = self.check(report(limitations="```markdown\n## HIGH\n[missing](missing.dart#L1)\n```\n[docs](https://example.com)"))
+        result = self.check(
+            report(summary="Context.\n\n```markdown\n## HIGH\n[missing](missing.dart#L1)\n```\n[docs](https://example.com)")
+        )
         self.assertEqual(result.errors, [])
         self.assertEqual(result.checked_links, 0)
 
@@ -140,7 +153,7 @@ class ValidateReviewTests(unittest.TestCase):
         )
 
     def test_reference_links_and_unclosed_fences(self):
-        self.assert_error(report(limitations="[source][ref]\n[ref]: source%20file.dart#L1"), "reference-style")
+        self.assert_error(report(summary="Context.\n\n[source][ref]\n[ref]: source%20file.dart#L1"), "reference-style")
         self.assert_error(report() + "\n```\n", "Unclosed fenced code block.")
 
     def test_symlinks_outside_report_tree(self):
