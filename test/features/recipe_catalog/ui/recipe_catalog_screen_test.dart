@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show SemanticsAction;
 
 import 'package:cookbook/features/recipe_catalog/data/recipe_repository.dart';
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
@@ -246,9 +247,16 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    final cardSemantics = find.bySemanticsLabel(
+      'Open Creamy Mushroom Pasta, 35 minutes, serves 4',
+    );
+    expect(cardSemantics, findsOneWidget);
     expect(
-      find.bySemanticsLabel('Open Creamy Mushroom Pasta, 35 minutes, serves 4'),
-      findsOneWidget,
+      tester
+          .getSemantics(cardSemantics)
+          .getSemanticsData()
+          .hasAction(SemanticsAction.tap),
+      isTrue,
     );
     final cardSize = tester.getSize(find.byType(RecipeCard));
     expect(cardSize.width, greaterThanOrEqualTo(48));

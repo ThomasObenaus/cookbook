@@ -13,6 +13,7 @@ class RecipeCard extends StatelessWidget {
 
     return Semantics(
       button: true,
+      onTap: onTap,
       label:
           'Open ${recipe.name}, ${recipe.totalMinutes} minutes, '
           'serves ${recipe.servings}',
