@@ -1,24 +1,25 @@
 import 'dart:collection';
 
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
+import 'package:cookbook/features/recipe_creator/models/ingredient_unit.dart';
 
 class IngredientDraft {
   const IngredientDraft({
     this.name = '',
     this.quantity = '',
-    this.unit = '',
+    this.unit,
     this.note = '',
   });
 
   final String name;
   final String quantity;
-  final String unit;
+  final IngredientUnit? unit;
   final String note;
 
   bool get isBlank =>
       name.trim().isEmpty &&
       quantity.trim().isEmpty &&
-      unit.trim().isEmpty &&
+      unit == null &&
       note.trim().isEmpty;
 }
 
@@ -26,7 +27,7 @@ class NewRecipe {
   factory NewRecipe.fromInput({
     required String name,
     required Iterable<IngredientDraft> ingredients,
-    required String preparationSteps,
+    required Iterable<String> steps,
     required String sourceImagePath,
   }) {
     final normalizedName = _requiredText(name, 'Recipe name');
@@ -51,7 +52,7 @@ class NewRecipe {
         Ingredient(
           name: ingredientName,
           quantity: _optionalText(draft.quantity),
-          unit: _optionalText(draft.unit),
+          unit: draft.unit?.storedValue,
           note: _optionalText(draft.note),
         ),
       );
@@ -60,11 +61,16 @@ class NewRecipe {
       throw const FormatException('At least one ingredient is required.');
     }
 
-    final normalizedSteps = preparationSteps
-        .split(RegExp(r'\r?\n'))
-        .map((step) => step.trim())
-        .where((step) => step.isNotEmpty)
-        .toList(growable: false);
+    final normalizedSteps = <String>[];
+    var stepIndex = 0;
+    for (final value in steps) {
+      stepIndex++;
+      final step = value.trim();
+      if (step.isEmpty) {
+        throw FormatException('Preparation step $stepIndex must not be empty.');
+      }
+      normalizedSteps.add(step);
+    }
     if (normalizedSteps.isEmpty) {
       throw const FormatException('At least one preparation step is required.');
     }

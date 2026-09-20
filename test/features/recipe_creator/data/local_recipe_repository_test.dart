@@ -5,6 +5,7 @@ import 'package:cookbook/features/recipe_catalog/data/recipe_repository.dart';
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
 import 'package:cookbook/features/recipe_catalog/models/recipe_image.dart';
 import 'package:cookbook/features/recipe_creator/data/local_recipe_repository.dart';
+import 'package:cookbook/features/recipe_creator/models/ingredient_unit.dart';
 import 'package:cookbook/features/recipe_creator/models/new_recipe.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -211,9 +212,13 @@ NewRecipe _newRecipe(String name, String imagePath) {
   return NewRecipe.fromInput(
     name: name,
     ingredients: const <IngredientDraft>[
-      IngredientDraft(name: 'salt', quantity: '1', unit: 'tsp'),
+      IngredientDraft(
+        name: 'salt',
+        quantity: '1',
+        unit: IngredientUnit.teaspoon,
+      ),
     ],
-    preparationSteps: 'Mix.\nCook.',
+    steps: const <String>['Mix.', 'Cook.'],
     sourceImagePath: imagePath,
   );
 }
