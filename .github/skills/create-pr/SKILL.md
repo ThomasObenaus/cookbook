@@ -1,20 +1,19 @@
 ---
 name: create-pr
-description: "Use when explicitly asked to create, open, or submit a GitHub pull request from a structured REVIEW.md file for the current branch's committed changes against main."
-argument-hint: "Path to REVIEW.md"
+description: "Use when explicitly asked to create, open, or submit a GitHub pull request from the repository-root REVIEW.md for the current branch's committed changes against main."
 user-invocable: true
 disable-model-invocation: true
 ---
 
 # Create GitHub Pull Request
 
-Create one ready-for-review GitHub pull request from the current branch into `main`. Invoking this skill with a review file authorizes that external action.
+Create one ready-for-review GitHub pull request from the current branch into `main`. Invoking this skill authorizes that external action.
 
-## Inputs
+## Input
 
-- Review file path: Required path to a UTF-8 Markdown file.
+- Always use `REVIEW.md` at the repository root. Do not accept or request a file path.
 
-If the path is missing or ambiguous, ask for it before running the command. Do not choose a review file implicitly.
+If root-level `REVIEW.md` is missing, fail with an error and stop before invoking GitHub CLI.
 
 The review must contain exactly one of each required heading:
 
@@ -45,17 +44,18 @@ The review must contain exactly one of each required heading:
 ## Preconditions
 
 - Use the repository provided by the workspace or active file. If it is ambiguous, ask which repository to use.
+- Root-level `REVIEW.md` must exist and use the required structure.
 - The current branch must contain the intended commits and already be published to a GitHub remote.
 - Python 3.10 or newer must be available; no Python packages are required.
 - GitHub CLI must be installed and authenticated with permission to create pull requests.
-- Complete any required implementation, tests, and review before invoking this skill. The script reads but does not modify the supplied review file.
+- Complete any required implementation, tests, and review before invoking this skill. The script reads but does not modify `REVIEW.md`.
 
 ## Procedure
 
-1. Substitute the quoted review path and run only this command from the repository:
+1. Run only this command from the repository root:
 
    ```sh
-   python3 -B .github/skills/create-pr/scripts/create_pr.py '<path-to-REVIEW.md>'
+   python3 -B .github/skills/create-pr/scripts/create_pr.py
    ```
 
    Do not wrap, chain, redirect, or extend the command. Do not run discovery or setup commands first.

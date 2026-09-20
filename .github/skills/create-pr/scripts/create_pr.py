@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 SEVERITIES = ("LOW", "MEDIUM", "HIGH")
+REVIEW_PATH = Path("REVIEW.md")
 
 
 class ReviewFormatError(ValueError):
@@ -102,11 +103,13 @@ def parse_review(report: str) -> PullRequestContent:
     return PullRequestContent(title=title_lines[0], body="\n\n".join(body_parts))
 
 
-def load_review(report_path: str | Path) -> PullRequestContent:
+def load_review() -> PullRequestContent:
     try:
-        report = Path(report_path).read_text(encoding="utf-8")
+        report = REVIEW_PATH.read_text(encoding="utf-8")
+    except FileNotFoundError as error:
+        raise ReviewFormatError("REVIEW.md is missing from the repository root.") from error
     except (OSError, UnicodeError) as error:
-        raise ReviewFormatError(f"Cannot read review: {error}") from error
+        raise ReviewFormatError(f"Cannot read repository-root REVIEW.md: {error}") from error
     return parse_review(report)
 
 
@@ -120,11 +123,10 @@ def create_pull_request(content: PullRequestContent) -> subprocess.CompletedProc
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Create a GitHub pull request from a structured REVIEW.md file.")
-    parser.add_argument("review_path", help="Path to the REVIEW.md file")
-    args = parser.parse_args()
+    parser = argparse.ArgumentParser(description="Create a GitHub pull request from repository-root REVIEW.md.")
+    parser.parse_args()
     try:
-        content = load_review(args.review_path)
+        content = load_review()
         result = create_pull_request(content)
     except ReviewFormatError as error:
         print(f"FAIL: {error}", file=sys.stderr)

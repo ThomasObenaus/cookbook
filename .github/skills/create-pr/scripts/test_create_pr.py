@@ -1,5 +1,7 @@
 import subprocess
 import unittest
+from contextlib import redirect_stderr
+from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -79,9 +81,8 @@ class ParseReviewTests(unittest.TestCase):
             review(low=""),
         )
         for invalid in invalid_reports:
-            with self.subTest(invalid=invalid):
-                with self.assertRaises(ReviewFormatError):
-                    parse_review(invalid)
+            with self.subTest(invalid=invalid), self.assertRaises(ReviewFormatError):
+                parse_review(invalid)
 
     def test_rejects_multiline_title_and_unclosed_fence(self):
         with self.assertRaisesRegex(ReviewFormatError, "exactly one non-empty line"):
@@ -93,12 +94,20 @@ class ParseReviewTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             report_path = Path(directory) / "REVIEW.md"
             report_path.write_text(review(title="Unicode title"), encoding="utf-8")
-            self.assertEqual(load_review(report_path).title, "Unicode title")
-            report_path.write_bytes(b"\xff")
-            with self.assertRaisesRegex(ReviewFormatError, "Cannot read review"):
-                load_review(report_path)
-            with self.assertRaisesRegex(ReviewFormatError, "Cannot read review"):
-                load_review(Path(directory) / "missing.md")
+            with patch("create_pr.REVIEW_PATH", report_path):
+                self.assertEqual(load_review().title, "Unicode title")
+                report_path.write_bytes(b"\xff")
+                with self.assertRaisesRegex(ReviewFormatError, "Cannot read repository-root REVIEW.md"):
+                    load_review()
+
+    def test_missing_root_review_stops_with_explicit_error(self):
+        with TemporaryDirectory() as directory:
+            missing_path = Path(directory) / "REVIEW.md"
+            with (
+                patch("create_pr.REVIEW_PATH", missing_path),
+                self.assertRaisesRegex(ReviewFormatError, "REVIEW.md is missing from the repository root"),
+            ):
+                load_review()
 
 
 class CreatePullRequestTests(unittest.TestCase):
@@ -126,6 +135,32 @@ class CreatePullRequestTests(unittest.TestCase):
             text=True,
             check=False,
         )
+
+    @patch("create_pr.create_pull_request")
+    @patch("create_pr.load_review")
+    def test_missing_review_does_not_call_github(self, load, create):
+        load.side_effect = ReviewFormatError("REVIEW.md is missing from the repository root.")
+        stderr = StringIO()
+
+        with patch("create_pr.sys.argv", ["create_pr.py"]), redirect_stderr(stderr):
+            self.assertEqual(__import__("create_pr").main(), 1)
+
+        self.assertIn("FAIL: REVIEW.md is missing from the repository root.", stderr.getvalue())
+        create.assert_not_called()
+
+    @patch("create_pr.create_pull_request")
+    def test_rejects_review_path_argument(self, create):
+        stderr = StringIO()
+
+        with (
+            patch("create_pr.sys.argv", ["create_pr.py", "other/REVIEW.md"]),
+            redirect_stderr(stderr),
+            self.assertRaisesRegex(SystemExit, "2"),
+        ):
+            __import__("create_pr").main()
+
+        self.assertIn("unrecognized arguments: other/REVIEW.md", stderr.getvalue())
+        create.assert_not_called()
 
 
 if __name__ == "__main__":
