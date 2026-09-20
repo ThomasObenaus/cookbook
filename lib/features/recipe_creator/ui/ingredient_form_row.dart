@@ -42,6 +42,7 @@ class IngredientFormRow extends StatelessWidget {
   const IngredientFormRow({
     required this.index,
     required this.controllers,
+    required this.enabled,
     required this.canRemove,
     required this.onChanged,
     required this.onRemove,
@@ -50,6 +51,7 @@ class IngredientFormRow extends StatelessWidget {
 
   final int index;
   final IngredientFormControllers controllers;
+  final bool enabled;
   final bool canRemove;
   final VoidCallback onChanged;
   final VoidCallback onRemove;
@@ -71,7 +73,7 @@ class IngredientFormRow extends StatelessWidget {
               ),
               IconButton(
                 key: ValueKey<String>('remove-ingredient-${controllers.id}'),
-                onPressed: canRemove ? onRemove : null,
+                onPressed: enabled && canRemove ? onRemove : null,
                 tooltip: 'Remove ingredient',
                 icon: const Icon(Icons.delete_outline),
               ),
@@ -81,6 +83,7 @@ class IngredientFormRow extends StatelessWidget {
             key: ValueKey<String>('ingredient-name-${controllers.id}'),
             controller: controllers.name,
             focusNode: controllers.nameFocusNode,
+            enabled: enabled,
             onChanged: (_) => onChanged(),
             textCapitalization: TextCapitalization.sentences,
             textInputAction: TextInputAction.next,
@@ -103,6 +106,7 @@ class IngredientFormRow extends StatelessWidget {
                     'ingredient-quantity-${controllers.id}',
                   ),
                   controller: controllers.quantity,
+                  enabled: enabled,
                   onChanged: (_) => onChanged(),
                   textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(labelText: 'Quantity'),
@@ -113,6 +117,7 @@ class IngredientFormRow extends StatelessWidget {
                 child: TextFormField(
                   key: ValueKey<String>('ingredient-unit-${controllers.id}'),
                   controller: controllers.unit,
+                  enabled: enabled,
                   onChanged: (_) => onChanged(),
                   textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(labelText: 'Unit'),
@@ -124,6 +129,7 @@ class IngredientFormRow extends StatelessWidget {
           TextFormField(
             key: ValueKey<String>('ingredient-note-${controllers.id}'),
             controller: controllers.note,
+            enabled: enabled,
             onChanged: (_) => onChanged(),
             textCapitalization: TextCapitalization.sentences,
             textInputAction: TextInputAction.next,

@@ -72,6 +72,9 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
   }
 
   void _addIngredient() {
+    if (_isSaving) {
+      return;
+    }
     setState(() {
       _ingredients.add(_newIngredient());
       _isDirty = true;
@@ -80,7 +83,7 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
   }
 
   void _removeIngredient(IngredientFormControllers ingredient) {
-    if (_ingredients.length == 1) {
+    if (_isSaving || _ingredients.length == 1) {
       return;
     }
     setState(() {
@@ -124,7 +127,7 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
   }
 
   Future<void> _save() async {
-    if (_isSaving) {
+    if (_isSaving || _isPickingImage) {
       return;
     }
     FocusScope.of(context).unfocus();
@@ -268,7 +271,7 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
             else
               IconButton(
                 key: const ValueKey<String>('save-recipe'),
-                onPressed: _save,
+                onPressed: _isPickingImage ? null : _save,
                 tooltip: 'Save recipe',
                 icon: const Icon(Icons.save_outlined),
               ),
@@ -323,7 +326,9 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
                       alignment: Alignment.centerLeft,
                       child: OutlinedButton.icon(
                         key: const ValueKey<String>('choose-recipe-image'),
-                        onPressed: _isPickingImage ? null : _chooseImage,
+                        onPressed: _isPickingImage || _isSaving
+                            ? null
+                            : _chooseImage,
                         icon: _isPickingImage
                             ? const SizedBox.square(
                                 dimension: 18,
@@ -353,6 +358,7 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
                       key: const ValueKey<String>('recipe-title-field'),
                       controller: _titleController,
                       focusNode: _titleFocusNode,
+                      enabled: !_isSaving,
                       onChanged: (_) => _markDirty(),
                       textCapitalization: TextCapitalization.sentences,
                       textInputAction: TextInputAction.next,
@@ -375,7 +381,7 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
                         ),
                         IconButton(
                           key: const ValueKey<String>('add-ingredient'),
-                          onPressed: _addIngredient,
+                          onPressed: _isSaving ? null : _addIngredient,
                           tooltip: 'Add ingredient',
                           icon: const Icon(Icons.add_circle_outline),
                         ),
@@ -397,6 +403,7 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
                         key: ValueKey<int>(_ingredients[index].id),
                         index: index,
                         controllers: _ingredients[index],
+                        enabled: !_isSaving,
                         canRemove: _ingredients.length > 1,
                         onChanged: _markDirty,
                         onRemove: () => _removeIngredient(_ingredients[index]),
@@ -408,6 +415,7 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
                       key: const ValueKey<String>('recipe-steps-field'),
                       controller: _stepsController,
                       focusNode: _stepsFocusNode,
+                      enabled: !_isSaving,
                       onChanged: (_) => _markDirty(),
                       textCapitalization: TextCapitalization.sentences,
                       keyboardType: TextInputType.multiline,

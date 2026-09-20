@@ -189,7 +189,7 @@ void main() {
     expect(find.text('Saved Family Soup'), findsOneWidget);
   });
 
-  testWidgets('disables duplicate saves and shows progress while pending', (
+  testWidgets('locks the submitted draft and shows progress while pending', (
     tester,
   ) async {
     final repository = _PendingRepository();
@@ -212,6 +212,46 @@ void main() {
     );
     expect(find.byTooltip('Save recipe'), findsNothing);
     expect(repository.createCount, 1);
+    expect(
+      tester
+          .widget<TextFormField>(
+            find.byKey(const ValueKey<String>('recipe-title-field')),
+          )
+          .enabled,
+      isFalse,
+    );
+    expect(
+      tester
+          .widget<TextFormField>(
+            find.byKey(const ValueKey<String>('ingredient-name-0')),
+          )
+          .enabled,
+      isFalse,
+    );
+    expect(
+      tester
+          .widget<TextFormField>(
+            find.byKey(const ValueKey<String>('recipe-steps-field')),
+          )
+          .enabled,
+      isFalse,
+    );
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.byKey(const ValueKey<String>('choose-recipe-image')),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(
+      tester
+          .widget<IconButton>(
+            find.byKey(const ValueKey<String>('add-ingredient')),
+          )
+          .onPressed,
+      isNull,
+    );
 
     repository.complete();
     await tester.pumpAndSettle();
