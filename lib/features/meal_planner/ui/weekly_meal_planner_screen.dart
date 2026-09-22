@@ -42,7 +42,8 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
   String _errorMessage = '';
   int _loadGeneration = 0;
   bool _recipesLoaded = false;
-  MealAssignmentIdentity? _mutatingSlot;
+  final Set<MealAssignmentIdentity> _mutatingSlots =
+      <MealAssignmentIdentity>{};
 
   @override
   void initState() {
@@ -152,7 +153,7 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
     MealAssignment? assignment,
   ) async {
     final identity = MealAssignmentIdentity(date: date, mealType: mealType);
-    if (_mutatingSlot == identity) {
+    if (_mutatingSlots.contains(identity)) {
       return;
     }
 
@@ -214,11 +215,11 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
 
   Future<void> _setAssignment(MealAssignment assignment, Recipe recipe) async {
     final identity = assignment.identity;
-    if (_mutatingSlot == identity) {
+    if (_mutatingSlots.contains(identity)) {
       return;
     }
     setState(() {
-      _mutatingSlot = identity;
+      _mutatingSlots.add(identity);
     });
 
     try {
@@ -238,7 +239,7 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
             assignment,
           ]);
         }
-        _mutatingSlot = null;
+        _mutatingSlots.remove(identity);
       });
     } on MealPlanRepositoryException catch (error) {
       _finishFailedMutation(
@@ -257,11 +258,11 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
 
   Future<void> _removeAssignment(DateTime date, MealType mealType) async {
     final identity = MealAssignmentIdentity(date: date, mealType: mealType);
-    if (_mutatingSlot == identity) {
+    if (_mutatingSlots.contains(identity)) {
       return;
     }
     setState(() {
-      _mutatingSlot = identity;
+      _mutatingSlots.add(identity);
     });
 
     try {
@@ -278,7 +279,7 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
             _assignments.where((assignment) => assignment.identity != identity),
           );
         }
-        _mutatingSlot = null;
+        _mutatingSlots.remove(identity);
       });
     } on MealPlanRepositoryException catch (error) {
       _finishFailedMutation(
@@ -300,11 +301,11 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
     String message,
     VoidCallback retry,
   ) {
-    if (!mounted || _mutatingSlot != identity) {
+    if (!mounted || !_mutatingSlots.contains(identity)) {
       return;
     }
     setState(() {
-      _mutatingSlot = null;
+      _mutatingSlots.remove(identity);
     });
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
@@ -375,7 +376,7 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
               isToday: isSameCalendarDate(date, _today),
               assignmentsByIdentity: assignmentsByIdentity,
               recipesById: _recipesById,
-              mutatingSlot: _mutatingSlot,
+              mutatingSlots: _mutatingSlots,
               onSlotTap: _handleSlotTap,
             ),
             if (date.weekday != DateTime.sunday) const SizedBox(height: 20),
@@ -463,7 +464,7 @@ class _DaySection extends StatelessWidget {
     required this.isToday,
     required this.assignmentsByIdentity,
     required this.recipesById,
-    required this.mutatingSlot,
+    required this.mutatingSlots,
     required this.onSlotTap,
   });
 
@@ -471,7 +472,7 @@ class _DaySection extends StatelessWidget {
   final bool isToday;
   final Map<MealAssignmentIdentity, MealAssignment> assignmentsByIdentity;
   final Map<String, Recipe> recipesById;
-  final MealAssignmentIdentity? mutatingSlot;
+  final Set<MealAssignmentIdentity> mutatingSlots;
   final void Function(
     DateTime date,
     MealType mealType,
@@ -533,7 +534,7 @@ class _DaySection extends StatelessWidget {
       mealType: mealType,
       recipe: recipe,
       isUnavailable: assignment != null && recipe == null,
-      isMutating: mutatingSlot == identity,
+      isMutating: mutatingSlots.contains(identity),
       onTap: () => onSlotTap(date, mealType, assignment),
     );
   }

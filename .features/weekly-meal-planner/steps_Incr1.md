@@ -182,36 +182,36 @@ make integration-test DEVICE=emulator-5554
 - [x] Verify long recipe names do not overlap icons or neighboring content.
 - [x] Verify the bottom navigation does not obscure Sunday or the last meal slot.
 - [x] Verify month, year, leap-day, and daylight-saving week boundaries on device.
-- [ ] Verify assignments survive force-stop and relaunch without network access.
+- [x] Verify assignments survive force-stop and relaunch without network access.
 - [x] Confirm snacks, custom meal types, free-text meals, suggestions, shopping lists, reminders, sharing, and cloud sync are absent.
 
 ## 10. Complete Final Validation
 
-- [ ] Confirm every acceptance criterion in [plan_Incr1.md](plan_Incr1.md#acceptance-criteria).
-- [ ] Run formatting and strict static analysis:
+- [x] Confirm every acceptance criterion in [plan_Incr1.md](plan_Incr1.md#acceptance-criteria).
+- [x] Run formatting and strict static analysis:
 
 ```bash
 make lint
 ```
 
-- [ ] Run the complete unit and widget test suite:
+- [x] Run the complete unit and widget test suite:
 
 ```bash
 make test
 ```
 
-- [ ] Run the complete Android integration journey:
+- [x] Run the complete Android integration journey:
 
 ```bash
 make integration-test DEVICE=emulator-5554
 ```
 
-- [ ] Build the debug APK:
+- [x] Build the debug APK:
 
 ```bash
 make build
 ```
 
-- [ ] Hot restart a connected app and inspect Recipes, Meal plan, week navigation, selection, assignment, change, and removal for runtime errors.
+- [x] Hot restart a connected app and inspect Recipes, Meal plan, week navigation, selection, assignment, change, and removal for runtime errors.
 - [ ] On a physical Android device, assign meals, force-stop and relaunch, and verify persisted assignments offline.
-- [ ] If the implementation is committed in `main...HEAD`, complete the repository review workflow.
+- [x] If the implementation is committed in `main...HEAD`, complete the repository review workflow.

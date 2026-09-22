@@ -380,6 +380,73 @@ void main() {
     },
   );
 
+  testWidgets('keeps overlapping slot mutations independently pending', (
+    tester,
+  ) async {
+    final porridge = _recipe('porridge', 'Morning Porridge');
+    final soup = _recipe('soup', 'Tomato Soup');
+    final repository = _RecordingMealPlanRepository();
+    final breakfastIdentity = MealAssignmentIdentity(
+      date: DateTime(2026, 9, 21),
+      mealType: MealType.breakfast,
+    );
+    final lunchIdentity = MealAssignmentIdentity(
+      date: DateTime(2026, 9, 21),
+      mealType: MealType.lunch,
+    );
+    final breakfastGate = Completer<void>();
+    final lunchGate = Completer<void>();
+    repository.setGates
+      ..[breakfastIdentity] = breakfastGate
+      ..[lunchIdentity] = lunchGate;
+
+    await tester.pumpWidget(
+      _testApp(
+        recipeRepository: _StaticRecipeRepository(<Recipe>[porridge, soup]),
+        mealPlanRepository: repository,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final breakfast = _slot('2026-09-21', MealType.breakfast);
+    final lunch = _slot('2026-09-21', MealType.lunch);
+    await tester.tap(breakfast);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('select-recipe-card-porridge')),
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(lunch);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('select-recipe-card-soup')),
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(repository.setCalls, hasLength(2));
+    expect(tester.widget<MealSlotTile>(breakfast).isMutating, isTrue);
+    expect(tester.widget<MealSlotTile>(lunch).isMutating, isTrue);
+
+    breakfastGate.complete();
+    await tester.pump();
+
+    expect(tester.widget<MealSlotTile>(breakfast).isMutating, isFalse);
+    expect(tester.widget<MealSlotTile>(lunch).isMutating, isTrue);
+    final lunchInkWell = find.descendant(
+      of: lunch,
+      matching: find.byType(InkWell),
+    );
+    expect(tester.widget<InkWell>(lunchInkWell).onTap, isNull);
+    expect(repository.setCalls, hasLength(2));
+
+    lunchGate.complete();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Morning Porridge'), findsOneWidget);
+    expect(find.text('Tomato Soup'), findsOneWidget);
+    expect(tester.widget<MealSlotTile>(lunch).isMutating, isFalse);
+  });
+
   testWidgets('changes an assignment and accepts the same recipe again', (
     tester,
   ) async {
@@ -697,6 +764,8 @@ class _RecordingMealPlanRepository implements MealPlanRepository {
   int removeFailuresRemaining;
   Completer<void>? setGate;
   Completer<void>? removeGate;
+  final Map<MealAssignmentIdentity, Completer<void>> setGates =
+      <MealAssignmentIdentity, Completer<void>>{};
 
   @override
   Future<List<MealAssignment>> loadWeek(DateTime weekStart) async {
@@ -721,6 +790,7 @@ class _RecordingMealPlanRepository implements MealPlanRepository {
         stackTrace: StackTrace.current,
       );
     }
+    await setGates[assignment.identity]?.future;
     await setGate?.future;
     assignments
       ..removeWhere((existing) => existing.identity == assignment.identity)
