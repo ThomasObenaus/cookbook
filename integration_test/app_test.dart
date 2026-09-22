@@ -223,8 +223,15 @@ Future<void> _fillIngredient(
   await tester.pumpAndSettle();
   await tester.tap(unitField);
   await tester.pumpAndSettle();
-  await tester.tap(find.text(unit.label).last);
+  final unitOptions = find.text(unit.label);
+  expect(unitOptions, findsWidgets);
+  final unitOption = unitOptions.last;
+  await tester.ensureVisible(unitOption);
   await tester.pumpAndSettle();
+  expect(unitOption.hitTestable(), findsOneWidget);
+  await tester.tap(unitOption);
+  await tester.pumpAndSettle();
+  expect(tester.state<FormFieldState<IngredientUnit>>(unitField).value, unit);
   if (note != null) {
     await tester.enterText(
       find.byKey(const ValueKey<String>('ingredient-note-field')),
