@@ -42,8 +42,7 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
   String _errorMessage = '';
   int _loadGeneration = 0;
   bool _recipesLoaded = false;
-  final Set<MealAssignmentIdentity> _mutatingSlots =
-      <MealAssignmentIdentity>{};
+  final Set<MealAssignmentIdentity> _mutatingSlots = <MealAssignmentIdentity>{};
 
   @override
   void initState() {
