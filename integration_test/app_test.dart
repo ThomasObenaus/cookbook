@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:cookbook/features/meal_planner/data/local_meal_plan_repository.dart';
+import 'package:cookbook/features/meal_planner/ui/meal_slot_tile.dart';
 import 'package:cookbook/features/recipe_catalog/data/asset_recipe_repository.dart';
 import 'package:cookbook/features/recipe_catalog/models/recipe_image.dart';
 import 'package:cookbook/features/recipe_catalog/ui/recipe_image_view.dart';
@@ -15,7 +17,7 @@ import 'package:integration_test/integration_test.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('family creates a recipe that survives an app restart', (
+  testWidgets('family recipes and meal plans survive an app restart', (
     tester,
   ) async {
     final supportDirectory = await Directory.systemTemp.createTemp(
@@ -39,17 +41,69 @@ void main() {
       applicationSupportDirectory: supportDirectory,
       createId: () => 'integration-family-soup',
     );
+    final mealPlanRepository = LocalMealPlanRepository(
+      applicationSupportDirectory: supportDirectory,
+    );
     await tester.pumpWidget(
       CookbookApp(
         key: const ValueKey<String>('initial-app'),
         repository: repository,
+        mealPlanRepository: mealPlanRepository,
         imagePicker: _FakePicker(sourceImage.path),
+        currentDateProvider: () => DateTime(2026, 9, 22),
       ),
     );
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(AppBar, 'Recipes'), findsOneWidget);
     expect(_gridItemCount(tester), 8);
+
+    await tester.tap(find.text('Meal plan'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(AppBar, 'Meal plan'), findsOneWidget);
+    expect(find.textContaining('Sep 21'), findsOneWidget);
+    expect(find.textContaining('Sep 27'), findsOneWidget);
+    expect(find.text('Breakfast'), findsNWidgets(7));
+    expect(find.text('Lunch'), findsNWidgets(7));
+    expect(find.text('Dinner'), findsNWidgets(7));
+
+    await tester.tap(find.byTooltip('Next week'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Sep 28'), findsOneWidget);
+    await _tapKey(tester, 'today-action');
+    expect(find.textContaining('Sep 21'), findsOneWidget);
+
+    const breakfastSlot = 'meal-slot-2026-09-21-breakfast';
+    const lunchSlot = 'meal-slot-2026-09-21-lunch';
+    await _assignRecipe(
+      tester,
+      slotKey: breakfastSlot,
+      recipeId: 'tomato-basil-pasta',
+    );
+    expect(find.text('Tomato Basil Pasta'), findsOneWidget);
+
+    await _changeRecipe(
+      tester,
+      slotKey: breakfastSlot,
+      recipeId: 'creamy-mushroom-pasta',
+    );
+    expect(find.text('Creamy Mushroom Pasta'), findsOneWidget);
+
+    await _assignRecipe(
+      tester,
+      slotKey: lunchSlot,
+      recipeId: 'tomato-basil-pasta',
+    );
+    expect(find.text('Tomato Basil Pasta'), findsOneWidget);
+
+    await _tapKey(tester, breakfastSlot);
+    await tester.tap(find.text('Remove'));
+    await tester.pumpAndSettle();
+    expect(find.text('Creamy Mushroom Pasta'), findsNothing);
+
+    await tester.tap(find.text('Recipes'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(AppBar, 'Recipes'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Create recipe'));
     await tester.pumpAndSettle();
@@ -181,18 +235,124 @@ void main() {
       'Simmer until tender.',
       'Season and serve.',
     ]);
+    final reloadedMealPlanRepository = LocalMealPlanRepository(
+      applicationSupportDirectory: supportDirectory,
+    );
     await tester.pumpWidget(
       CookbookApp(
         key: const ValueKey<String>('restarted-app'),
         repository: reloadedRepository,
+        mealPlanRepository: reloadedMealPlanRepository,
         imagePicker: _FakePicker(sourceImage.path),
+        currentDateProvider: () => DateTime(2026, 9, 22),
       ),
     );
     await tester.pumpAndSettle();
 
     expect(_gridItemCount(tester), 9);
     expect(find.text('Family Vegetable Soup'), findsOneWidget);
+
+    await tester.tap(find.text('Meal plan'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Sep 21'), findsOneWidget);
+    expect(find.text('Tomato Basil Pasta'), findsOneWidget);
+    final breakfast = tester.widget<MealSlotTile>(
+      find.byKey(const ValueKey<String>(breakfastSlot)),
+    );
+    final lunch = tester.widget<MealSlotTile>(
+      find.byKey(const ValueKey<String>(lunchSlot)),
+    );
+    expect(breakfast.recipe, isNull);
+    expect(breakfast.isUnavailable, isFalse);
+    expect(lunch.recipe?.id, 'tomato-basil-pasta');
+    expect(find.text('Creamy Mushroom Pasta'), findsNothing);
+
+    await _verifyWeekBoundary(
+      tester,
+      repository: reloadedRepository,
+      mealPlanRepository: reloadedMealPlanRepository,
+      imagePath: sourceImage.path,
+      currentDate: DateTime(2025, 12, 31, 23),
+      expectedStart: 'Dec 29',
+      expectedEnd: 'Jan 4',
+      expectedNextStart: 'Jan 5',
+      appKey: 'year-boundary-app',
+    );
+    await _verifyWeekBoundary(
+      tester,
+      repository: reloadedRepository,
+      mealPlanRepository: reloadedMealPlanRepository,
+      imagePath: sourceImage.path,
+      currentDate: DateTime(2024, 2, 29, 23),
+      expectedStart: 'Feb 26',
+      expectedEnd: 'Mar 3',
+      expectedNextStart: 'Mar 4',
+      appKey: 'leap-boundary-app',
+    );
+    await _verifyWeekBoundary(
+      tester,
+      repository: reloadedRepository,
+      mealPlanRepository: reloadedMealPlanRepository,
+      imagePath: sourceImage.path,
+      currentDate: DateTime(2026, 3, 8, 23),
+      expectedStart: 'Mar 2',
+      expectedEnd: 'Mar 8',
+      expectedNextStart: 'Mar 9',
+      appKey: 'daylight-saving-boundary-app',
+    );
   });
+}
+
+Future<void> _verifyWeekBoundary(
+  WidgetTester tester, {
+  required LocalRecipeRepository repository,
+  required LocalMealPlanRepository mealPlanRepository,
+  required String imagePath,
+  required DateTime currentDate,
+  required String expectedStart,
+  required String expectedEnd,
+  required String expectedNextStart,
+  required String appKey,
+}) async {
+  await tester.pumpWidget(
+    CookbookApp(
+      key: ValueKey<String>(appKey),
+      repository: repository,
+      mealPlanRepository: mealPlanRepository,
+      imagePicker: _FakePicker(imagePath),
+      currentDateProvider: () => currentDate,
+    ),
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Meal plan'));
+  await tester.pumpAndSettle();
+
+  expect(find.textContaining(expectedStart), findsOneWidget);
+  expect(find.textContaining(expectedEnd), findsOneWidget);
+  await tester.tap(find.byTooltip('Next week'));
+  await tester.pumpAndSettle();
+  expect(find.textContaining(expectedNextStart), findsOneWidget);
+}
+
+Future<void> _assignRecipe(
+  WidgetTester tester, {
+  required String slotKey,
+  required String recipeId,
+}) async {
+  await _tapKey(tester, slotKey);
+  expect(find.text('Select recipe'), findsOneWidget);
+  await _tapKey(tester, 'select-recipe-card-$recipeId');
+}
+
+Future<void> _changeRecipe(
+  WidgetTester tester, {
+  required String slotKey,
+  required String recipeId,
+}) async {
+  await _tapKey(tester, slotKey);
+  await tester.tap(find.text('Change recipe'));
+  await tester.pumpAndSettle();
+  await _tapKey(tester, 'select-recipe-card-$recipeId');
 }
 
 Future<void> _tapKey(WidgetTester tester, String key) async {

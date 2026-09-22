@@ -1,3 +1,6 @@
+import 'package:cookbook/features/meal_planner/data/meal_plan_repository.dart';
+import 'package:cookbook/features/meal_planner/models/meal_assignment.dart';
+import 'package:cookbook/features/meal_planner/models/meal_type.dart';
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
 import 'package:cookbook/features/recipe_catalog/models/recipe_image.dart';
 import 'package:cookbook/features/recipe_creator/data/mutable_recipe_repository.dart';
@@ -25,7 +28,9 @@ void main() {
             steps: const <String>['Cook the pasta.'],
           ),
         ]),
+        mealPlanRepository: const _EmptyMealPlanRepository(),
         imagePicker: const _FakePicker(),
+        currentDateProvider: () => DateTime(2026, 9, 22),
       ),
     );
     await tester.pumpAndSettle();
@@ -36,6 +41,16 @@ void main() {
     expect(find.text('30 min'), findsOneWidget);
     expect(find.text('Serves 4'), findsOneWidget);
     expect(find.byTooltip('Create recipe'), findsOneWidget);
+    expect(find.text('Recipes'), findsNWidgets(2));
+    expect(find.text('Meal plan'), findsOneWidget);
+    expect(
+      tester
+          .widget<NavigationBar>(
+            find.byKey(const ValueKey<String>('cookbook-primary-navigation')),
+          )
+          .selectedIndex,
+      0,
+    );
   });
 
   testWidgets('shows a controlled state when startup configuration fails', (
@@ -73,4 +88,21 @@ class _FakePicker implements RecipeImagePicker {
 
   @override
   Future<String?> pickFromGallery() async => null;
+}
+
+class _EmptyMealPlanRepository implements MealPlanRepository {
+  const _EmptyMealPlanRepository();
+
+  @override
+  Future<List<MealAssignment>> loadWeek(DateTime weekStart) async =>
+      const <MealAssignment>[];
+
+  @override
+  Future<void> removeAssignment({
+    required DateTime date,
+    required MealType mealType,
+  }) async {}
+
+  @override
+  Future<void> setAssignment(MealAssignment assignment) async {}
 }
