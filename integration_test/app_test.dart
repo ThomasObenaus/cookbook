@@ -216,7 +216,12 @@ Future<void> _fillIngredient(
     find.byKey(const ValueKey<String>('ingredient-quantity-field')),
     quantity,
   );
-  await tester.tap(find.byKey(const ValueKey<String>('ingredient-unit-field')));
+  final unitField = find.byKey(const ValueKey<String>('ingredient-unit-field'));
+  FocusManager.instance.primaryFocus?.unfocus();
+  await tester.pumpAndSettle();
+  await tester.ensureVisible(unitField);
+  await tester.pumpAndSettle();
+  await tester.tap(unitField);
   await tester.pumpAndSettle();
   await tester.tap(find.text(unit.label).last);
   await tester.pumpAndSettle();
