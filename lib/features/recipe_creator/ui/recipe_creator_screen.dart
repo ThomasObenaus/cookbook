@@ -1,10 +1,12 @@
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
-import 'package:cookbook/features/recipe_catalog/models/recipe_image.dart';
-import 'package:cookbook/features/recipe_catalog/ui/recipe_image_view.dart';
 import 'package:cookbook/features/recipe_creator/data/mutable_recipe_repository.dart';
 import 'package:cookbook/features/recipe_creator/data/recipe_image_picker.dart';
 import 'package:cookbook/features/recipe_creator/models/new_recipe.dart';
-import 'package:cookbook/features/recipe_creator/ui/ingredient_form_row.dart';
+import 'package:cookbook/features/recipe_creator/models/recipe_creator_stage.dart';
+import 'package:cookbook/features/recipe_creator/ui/ingredient_wizard_step.dart';
+import 'package:cookbook/features/recipe_creator/ui/preparation_wizard_step.dart';
+import 'package:cookbook/features/recipe_creator/ui/recipe_basics_step.dart';
+import 'package:cookbook/features/recipe_creator/ui/recipe_review_step.dart';
 import 'package:flutter/material.dart';
 
 class RecipeCreatorScreen extends StatefulWidget {
@@ -22,76 +24,65 @@ class RecipeCreatorScreen extends StatefulWidget {
 }
 
 class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _scrollController = ScrollController();
   final _titleController = TextEditingController();
-  final _stepsController = TextEditingController();
   final _titleFocusNode = FocusNode();
-  final _stepsFocusNode = FocusNode();
-  final List<IngredientFormControllers> _ingredients =
-      <IngredientFormControllers>[];
+  final _imageFocusNode = FocusNode();
+  final _ingredientControllers = IngredientEditorControllers();
+  final _preparationController = TextEditingController();
+  final _preparationFocusNode = FocusNode();
 
-  int _nextIngredientId = 0;
+  RecipeCreatorStage _stage = RecipeCreatorStage.recipe;
+  List<IngredientDraft> _ingredients = const <IngredientDraft>[];
+  List<String> _steps = const <String>[];
   String? _selectedImagePath;
+  String? _titleError;
   String? _imageError;
-  String? _ingredientError;
+  String? _ingredientNameError;
+  String? _preparationError;
+  int? _editingIngredientIndex;
+  int? _editingPreparationIndex;
+  bool _ingredientEditorVisible = true;
+  bool _preparationEditorVisible = true;
   bool _isDirty = false;
   bool _isPickingImage = false;
   bool _isSaving = false;
   bool _allowPop = false;
 
   @override
-  void initState() {
-    super.initState();
-    _ingredients.add(_newIngredient());
-  }
-
-  @override
   void dispose() {
     _scrollController.dispose();
     _titleController.dispose();
-    _stepsController.dispose();
     _titleFocusNode.dispose();
-    _stepsFocusNode.dispose();
-    for (final ingredient in _ingredients) {
-      ingredient.dispose();
-    }
+    _imageFocusNode.dispose();
+    _ingredientControllers.dispose();
+    _preparationController.dispose();
+    _preparationFocusNode.dispose();
     super.dispose();
   }
 
-  IngredientFormControllers _newIngredient() {
-    return IngredientFormControllers(_nextIngredientId++);
-  }
-
-  void _markDirty() {
-    if (!_isDirty) {
-      setState(() {
-        _isDirty = true;
-      });
-    }
-  }
-
-  void _addIngredient() {
+  void _setStage(RecipeCreatorStage stage) {
     if (_isSaving) {
       return;
     }
+    FocusScope.of(context).unfocus();
     setState(() {
-      _ingredients.add(_newIngredient());
-      _isDirty = true;
-      _ingredientError = null;
+      _stage = stage;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _scrollController.hasClients) {
+        _scrollController.jumpTo(0);
+      }
     });
   }
 
-  void _removeIngredient(IngredientFormControllers ingredient) {
-    if (_isSaving || _ingredients.length == 1) {
-      return;
-    }
+  void _titleChanged(String value) {
     setState(() {
-      _ingredients.remove(ingredient);
       _isDirty = true;
-      _ingredientError = null;
+      if (value.trim().isNotEmpty) {
+        _titleError = null;
+      }
     });
-    ingredient.dispose();
   }
 
   Future<void> _chooseImage() async {
@@ -100,7 +91,6 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
     }
     setState(() {
       _isPickingImage = true;
-      _imageError = null;
     });
     try {
       final path = await widget.imagePicker.pickFromGallery();
@@ -109,6 +99,7 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
       }
       setState(() {
         _selectedImagePath = path;
+        _imageError = null;
         _isDirty = true;
       });
     } on RecipeImagePickerException catch (error) {
@@ -126,20 +117,283 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
     }
   }
 
-  Future<void> _save() async {
+  void _continue() {
     if (_isSaving || _isPickingImage) {
       return;
     }
     FocusScope.of(context).unfocus();
+    switch (_stage) {
+      case RecipeCreatorStage.recipe:
+        if (_validateRecipe()) {
+          _setStage(RecipeCreatorStage.ingredients);
+        }
+      case RecipeCreatorStage.ingredients:
+        if (_commitIngredient(forContinue: true)) {
+          _setStage(RecipeCreatorStage.preparation);
+        }
+      case RecipeCreatorStage.preparation:
+        if (_commitPreparationStep(forContinue: true)) {
+          _setStage(RecipeCreatorStage.review);
+        }
+      case RecipeCreatorStage.review:
+        _save();
+    }
+  }
 
-    final hasIngredient = _ingredients.any((ingredient) => !ingredient.isBlank);
+  bool _validateRecipe() {
+    final titleError = _titleController.text.trim().isEmpty
+        ? 'Enter a recipe title'
+        : null;
+    final imageError = _selectedImagePath == null
+        ? 'Choose a recipe image'
+        : null;
     setState(() {
-      _imageError = _selectedImagePath == null ? 'Choose a recipe image' : null;
-      _ingredientError = hasIngredient ? null : 'Add at least one ingredient';
+      _titleError = titleError;
+      _imageError = imageError;
     });
-    final isFormValid = _formKey.currentState?.validate() ?? false;
-    if (!isFormValid || _imageError != null || _ingredientError != null) {
-      _focusFirstInvalidField();
+    if (imageError != null) {
+      _imageFocusNode.requestFocus();
+      return false;
+    }
+    if (titleError != null) {
+      _titleFocusNode.requestFocus();
+      return false;
+    }
+    return true;
+  }
+
+  void _ingredientChanged() {
+    setState(() {
+      _isDirty = true;
+      if (_ingredientControllers.name.text.trim().isNotEmpty) {
+        _ingredientNameError = null;
+      }
+    });
+  }
+
+  bool _commitIngredient({required bool forContinue}) {
+    if (!_ingredientEditorVisible) {
+      if (_ingredients.isNotEmpty) {
+        return true;
+      }
+      _showIngredientError('Add at least one ingredient');
+      return false;
+    }
+
+    if (_ingredientControllers.isBlank) {
+      if (forContinue && _ingredients.isNotEmpty) {
+        if (_editingIngredientIndex != null) {
+          _showIngredientError('Enter an ingredient name');
+          return false;
+        }
+        setState(() {
+          _ingredientEditorVisible = false;
+          _editingIngredientIndex = null;
+          _ingredientNameError = null;
+          _ingredientControllers.clear();
+        });
+        return true;
+      }
+      _showIngredientError(
+        forContinue
+            ? 'Add at least one ingredient'
+            : 'Enter an ingredient name',
+      );
+      return false;
+    }
+    if (_ingredientControllers.name.text.trim().isEmpty) {
+      _showIngredientError('Enter an ingredient name');
+      return false;
+    }
+
+    final draft = _ingredientControllers.toDraft();
+    final nextIngredients = List<IngredientDraft>.of(_ingredients);
+    final editingIndex = _editingIngredientIndex;
+    if (editingIndex == null) {
+      nextIngredients.add(draft);
+    } else {
+      nextIngredients[editingIndex] = draft;
+    }
+    setState(() {
+      _ingredients = List<IngredientDraft>.unmodifiable(nextIngredients);
+      _ingredientEditorVisible = false;
+      _editingIngredientIndex = null;
+      _ingredientNameError = null;
+      _isDirty = true;
+      _ingredientControllers.clear();
+    });
+    return true;
+  }
+
+  void _showIngredientError(String message) {
+    setState(() {
+      _ingredientNameError = message;
+    });
+    _ingredientControllers.nameFocusNode.requestFocus();
+  }
+
+  void _addIngredient() {
+    if (_isSaving || _ingredientEditorVisible) {
+      return;
+    }
+    setState(() {
+      _ingredientControllers.clear();
+      _editingIngredientIndex = null;
+      _ingredientEditorVisible = true;
+      _ingredientNameError = null;
+    });
+    _ingredientControllers.nameFocusNode.requestFocus();
+  }
+
+  void _editIngredient(int index) {
+    if (_isSaving || _ingredientEditorVisible) {
+      return;
+    }
+    setState(() {
+      _ingredientControllers.load(_ingredients[index]);
+      _editingIngredientIndex = index;
+      _ingredientEditorVisible = true;
+      _ingredientNameError = null;
+    });
+    _ingredientControllers.nameFocusNode.requestFocus();
+  }
+
+  void _removeIngredient(int index) {
+    if (_isSaving) {
+      return;
+    }
+    final nextIngredients = List<IngredientDraft>.of(_ingredients)
+      ..removeAt(index);
+    setState(() {
+      _ingredients = List<IngredientDraft>.unmodifiable(nextIngredients);
+      if (_editingIngredientIndex != null && index < _editingIngredientIndex!) {
+        _editingIngredientIndex = _editingIngredientIndex! - 1;
+      }
+      if (_ingredients.isEmpty && !_ingredientEditorVisible) {
+        _ingredientControllers.clear();
+        _ingredientEditorVisible = true;
+        _editingIngredientIndex = null;
+      }
+      _ingredientNameError = null;
+      _isDirty = true;
+    });
+  }
+
+  void _preparationChanged() {
+    setState(() {
+      _isDirty = true;
+      if (_preparationController.text.trim().isNotEmpty) {
+        _preparationError = null;
+      }
+    });
+  }
+
+  bool _commitPreparationStep({required bool forContinue}) {
+    if (!_preparationEditorVisible) {
+      if (_steps.isNotEmpty) {
+        return true;
+      }
+      _showPreparationError('Add at least one preparation step');
+      return false;
+    }
+
+    final instruction = _preparationController.text.trim();
+    if (instruction.isEmpty) {
+      if (forContinue && _steps.isNotEmpty) {
+        if (_editingPreparationIndex != null) {
+          _showPreparationError('Enter a preparation step');
+          return false;
+        }
+        setState(() {
+          _preparationEditorVisible = false;
+          _editingPreparationIndex = null;
+          _preparationError = null;
+          _preparationController.clear();
+        });
+        return true;
+      }
+      _showPreparationError(
+        forContinue
+            ? 'Add at least one preparation step'
+            : 'Enter a preparation step',
+      );
+      return false;
+    }
+
+    final nextSteps = List<String>.of(_steps);
+    final editingIndex = _editingPreparationIndex;
+    if (editingIndex == null) {
+      nextSteps.add(instruction);
+    } else {
+      nextSteps[editingIndex] = instruction;
+    }
+    setState(() {
+      _steps = List<String>.unmodifiable(nextSteps);
+      _preparationEditorVisible = false;
+      _editingPreparationIndex = null;
+      _preparationError = null;
+      _isDirty = true;
+      _preparationController.clear();
+    });
+    return true;
+  }
+
+  void _showPreparationError(String message) {
+    setState(() {
+      _preparationError = message;
+    });
+    _preparationFocusNode.requestFocus();
+  }
+
+  void _addPreparationStep() {
+    if (_isSaving || _preparationEditorVisible) {
+      return;
+    }
+    setState(() {
+      _preparationController.clear();
+      _editingPreparationIndex = null;
+      _preparationEditorVisible = true;
+      _preparationError = null;
+    });
+    _preparationFocusNode.requestFocus();
+  }
+
+  void _editPreparationStep(int index) {
+    if (_isSaving || _preparationEditorVisible) {
+      return;
+    }
+    setState(() {
+      _preparationController.text = _steps[index];
+      _editingPreparationIndex = index;
+      _preparationEditorVisible = true;
+      _preparationError = null;
+    });
+    _preparationFocusNode.requestFocus();
+  }
+
+  void _removePreparationStep(int index) {
+    if (_isSaving) {
+      return;
+    }
+    final nextSteps = List<String>.of(_steps)..removeAt(index);
+    setState(() {
+      _steps = List<String>.unmodifiable(nextSteps);
+      if (_editingPreparationIndex != null &&
+          index < _editingPreparationIndex!) {
+        _editingPreparationIndex = _editingPreparationIndex! - 1;
+      }
+      if (_steps.isEmpty && !_preparationEditorVisible) {
+        _preparationController.clear();
+        _preparationEditorVisible = true;
+        _editingPreparationIndex = null;
+      }
+      _preparationError = null;
+      _isDirty = true;
+    });
+  }
+
+  Future<void> _save() async {
+    if (_isSaving || _isPickingImage || _stage != RecipeCreatorStage.review) {
       return;
     }
 
@@ -147,8 +401,8 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
     try {
       newRecipe = NewRecipe.fromInput(
         name: _titleController.text,
-        ingredients: _ingredients.map((ingredient) => ingredient.toDraft()),
-        preparationSteps: _stepsController.text,
+        ingredients: _ingredients,
+        steps: _steps,
         sourceImagePath: _selectedImagePath!,
       );
     } on FormatException catch (error) {
@@ -178,38 +432,19 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
     }
   }
 
-  void _focusFirstInvalidField() {
-    if (_titleController.text.trim().isEmpty) {
-      _titleFocusNode.requestFocus();
-      return;
-    }
-    if (_selectedImagePath == null) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-      );
-      return;
-    }
-    for (final ingredient in _ingredients) {
-      if (!ingredient.isBlank && ingredient.name.text.trim().isEmpty) {
-        ingredient.nameFocusNode.requestFocus();
-        return;
-      }
-    }
-    if (_ingredientError != null && _ingredients.isNotEmpty) {
-      _ingredients.first.nameFocusNode.requestFocus();
-      return;
-    }
-    if (_stepsController.text.trim().isEmpty) {
-      _stepsFocusNode.requestFocus();
-    }
-  }
-
-  Future<void> _handleBlockedPop() async {
+  Future<void> _handleBack() async {
     if (_isSaving) {
       return;
     }
+    if (_stage.index > 0) {
+      _setStage(RecipeCreatorStage.values[_stage.index - 1]);
+      return;
+    }
+    if (!_isDirty) {
+      _pop(null);
+      return;
+    }
+
     final discard = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -244,202 +479,202 @@ class _RecipeCreatorScreenState extends State<RecipeCreatorScreen> {
     });
   }
 
+  Widget _stageBody() {
+    return switch (_stage) {
+      RecipeCreatorStage.recipe => RecipeBasicsStep(
+        titleController: _titleController,
+        titleFocusNode: _titleFocusNode,
+        imageFocusNode: _imageFocusNode,
+        selectedImagePath: _selectedImagePath,
+        titleError: _titleError,
+        imageError: _imageError,
+        isPickingImage: _isPickingImage,
+        enabled: !_isSaving && !_isPickingImage,
+        onTitleChanged: _titleChanged,
+        onChooseImage: _chooseImage,
+      ),
+      RecipeCreatorStage.ingredients => IngredientWizardStep(
+        ingredients: _ingredients,
+        controllers: _ingredientControllers,
+        editorVisible: _ingredientEditorVisible,
+        editingIndex: _editingIngredientIndex,
+        nameError: _ingredientNameError,
+        enabled: !_isSaving,
+        onChanged: _ingredientChanged,
+        onSave: () => _commitIngredient(forContinue: false),
+        onAdd: _addIngredient,
+        onEdit: _editIngredient,
+        onRemove: _removeIngredient,
+      ),
+      RecipeCreatorStage.preparation => PreparationWizardStep(
+        steps: _steps,
+        controller: _preparationController,
+        focusNode: _preparationFocusNode,
+        editorVisible: _preparationEditorVisible,
+        editingIndex: _editingPreparationIndex,
+        stepError: _preparationError,
+        enabled: !_isSaving,
+        onChanged: _preparationChanged,
+        onSave: () => _commitPreparationStep(forContinue: false),
+        onAdd: _addPreparationStep,
+        onEdit: _editPreparationStep,
+        onRemove: _removePreparationStep,
+      ),
+      RecipeCreatorStage.review => RecipeReviewStep(
+        title: _titleController.text,
+        imagePath: _selectedImagePath!,
+        ingredients: _ingredients,
+        steps: _steps,
+        enabled: !_isSaving,
+        onEditRecipe: () => _setStage(RecipeCreatorStage.recipe),
+        onEditIngredients: () => _setStage(RecipeCreatorStage.ingredients),
+        onEditPreparation: () => _setStage(RecipeCreatorStage.preparation),
+      ),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope<Recipe>(
-      canPop: !_isDirty || _allowPop,
+      canPop: _allowPop,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop && !_allowPop) {
-          _handleBlockedPop();
+          _handleBack();
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Create recipe'),
-          actions: <Widget>[
-            if (_isSaving)
-              const Padding(
-                padding: EdgeInsets.all(12),
-                child: SizedBox.square(
-                  dimension: 24,
-                  child: CircularProgressIndicator(
-                    key: ValueKey<String>('recipe-save-progress'),
-                    strokeWidth: 2.5,
-                  ),
-                ),
-              )
-            else
-              IconButton(
-                key: const ValueKey<String>('save-recipe'),
-                onPressed: _isPickingImage ? null : _save,
-                tooltip: 'Save recipe',
-                icon: const Icon(Icons.save_outlined),
-              ),
-          ],
-        ),
-        body: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            key: const ValueKey<String>('recipe-creator-scroll-view'),
-            controller: _scrollController,
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 720),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Text(
-                      'Main image',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    AspectRatio(
-                      aspectRatio: 4 / 3,
-                      child: _selectedImagePath == null
-                          ? DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Icon(Icons.image_outlined, size: 56),
-                                  SizedBox(height: 8),
-                                  Text('No image selected'),
-                                ],
-                              ),
-                            )
-                          : ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: RecipeImageView(
-                                image: RecipeImage.file(_selectedImagePath!),
-                                semanticLabel: 'Selected recipe image',
-                              ),
-                            ),
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: OutlinedButton.icon(
-                        key: const ValueKey<String>('choose-recipe-image'),
-                        onPressed: _isPickingImage || _isSaving
-                            ? null
-                            : _chooseImage,
-                        icon: _isPickingImage
-                            ? const SizedBox.square(
-                                dimension: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.photo_library_outlined),
-                        label: Text(
-                          _selectedImagePath == null
-                              ? 'Choose image'
-                              : 'Replace image',
-                        ),
-                      ),
-                    ),
-                    if (_imageError != null) ...<Widget>[
-                      const SizedBox(height: 4),
-                      Text(
-                        _imageError!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    TextFormField(
-                      key: const ValueKey<String>('recipe-title-field'),
-                      controller: _titleController,
-                      focusNode: _titleFocusNode,
-                      enabled: !_isSaving,
-                      onChanged: (_) => _markDirty(),
-                      textCapitalization: TextCapitalization.sentences,
-                      textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        labelText: 'Recipe title',
-                      ),
-                      validator: (value) =>
-                          value == null || value.trim().isEmpty
-                          ? 'Enter a recipe title'
-                          : null,
-                    ),
-                    const SizedBox(height: 28),
-                    Row(
+        appBar: AppBar(title: const Text('Create recipe')),
+        body: Column(
+          children: <Widget>[
+            Expanded(
+              child: SingleChildScrollView(
+                key: const ValueKey<String>('recipe-creator-scroll-view'),
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
-                        Expanded(
-                          child: Text(
-                            'Ingredients',
-                            style: Theme.of(context).textTheme.titleLarge,
+                        Semantics(
+                          container: true,
+                          header: true,
+                          label:
+                              '${_stage.title}. Step ${_stage.stepNumber} of '
+                              '${RecipeCreatorStage.values.length}',
+                          child: ExcludeSemantics(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  'Step ${_stage.stepNumber} of '
+                                  '${RecipeCreatorStage.values.length}',
+                                  key: const ValueKey<String>(
+                                    'creator-stage-progress',
+                                  ),
+                                  style: Theme.of(context).textTheme.labelLarge
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _stage.title,
+                                  key: const ValueKey<String>(
+                                    'creator-stage-title',
+                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        IconButton(
-                          key: const ValueKey<String>('add-ingredient'),
-                          onPressed: _isSaving ? null : _addIngredient,
-                          tooltip: 'Add ingredient',
-                          icon: const Icon(Icons.add_circle_outline),
-                        ),
+                        const SizedBox(height: 24),
+                        _stageBody(),
                       ],
                     ),
-                    if (_ingredientError != null)
-                      Text(
-                        _ingredientError!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    for (
-                      var index = 0;
-                      index < _ingredients.length;
-                      index++
-                    ) ...<Widget>[
-                      IngredientFormRow(
-                        key: ValueKey<int>(_ingredients[index].id),
-                        index: index,
-                        controllers: _ingredients[index],
-                        enabled: !_isSaving,
-                        canRemove: _ingredients.length > 1,
-                        onChanged: _markDirty,
-                        onRemove: () => _removeIngredient(_ingredients[index]),
-                      ),
-                      if (index < _ingredients.length - 1) const Divider(),
-                    ],
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      key: const ValueKey<String>('recipe-steps-field'),
-                      controller: _stepsController,
-                      focusNode: _stepsFocusNode,
-                      enabled: !_isSaving,
-                      onChanged: (_) => _markDirty(),
-                      textCapitalization: TextCapitalization.sentences,
-                      keyboardType: TextInputType.multiline,
-                      minLines: 5,
-                      maxLines: 10,
-                      decoration: const InputDecoration(
-                        labelText: 'Preparation steps',
-                        helperText: 'Enter one step per line',
-                        alignLabelWithHint: true,
-                      ),
-                      validator: (value) {
-                        final hasStep =
-                            value
-                                ?.split(RegExp(r'\r?\n'))
-                                .any((step) => step.trim().isNotEmpty) ??
-                            false;
-                        return hasStep ? null : 'Enter at least one step';
-                      },
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
+            _WizardActions(
+              stage: _stage,
+              isSaving: _isSaving,
+              enabled: !_isSaving && !_isPickingImage,
+              onBack: _handleBack,
+              onContinue: _continue,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WizardActions extends StatelessWidget {
+  const _WizardActions({
+    required this.stage,
+    required this.isSaving,
+    required this.enabled,
+    required this.onBack,
+    required this.onContinue,
+  });
+
+  final RecipeCreatorStage stage;
+  final bool isSaving;
+  final bool enabled;
+  final VoidCallback onBack;
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final isReview = stage == RecipeCreatorStage.review;
+    return Material(
+      elevation: 8,
+      color: Theme.of(context).colorScheme.surface,
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.all(12),
+        child: OverflowBar(
+          spacing: 12,
+          overflowSpacing: 8,
+          alignment: MainAxisAlignment.spaceBetween,
+          overflowAlignment: OverflowBarAlignment.end,
+          children: <Widget>[
+            OutlinedButton.icon(
+              key: const ValueKey<String>('wizard-back'),
+              onPressed: enabled ? onBack : null,
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('Back'),
+            ),
+            FilledButton.icon(
+              key: ValueKey<String>(
+                isReview ? 'save-recipe' : 'wizard-continue',
+              ),
+              onPressed: enabled ? onContinue : null,
+              icon: isSaving
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(
+                        key: ValueKey<String>('recipe-save-progress'),
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Icon(isReview ? Icons.save_outlined : Icons.arrow_forward),
+              label: Text(
+                isSaving
+                    ? 'Saving'
+                    : isReview
+                    ? 'Save recipe'
+                    : 'Continue',
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -10,6 +10,7 @@ import 'package:cookbook/features/recipe_catalog/ui/recipe_catalog_screen.dart';
 import 'package:cookbook/features/recipe_catalog/ui/recipe_detail_screen.dart';
 import 'package:cookbook/features/recipe_creator/data/mutable_recipe_repository.dart';
 import 'package:cookbook/features/recipe_creator/data/recipe_image_picker.dart';
+import 'package:cookbook/features/recipe_creator/models/ingredient_unit.dart';
 import 'package:cookbook/features/recipe_creator/models/new_recipe.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -452,33 +453,44 @@ Future<void> _createRecipe(WidgetTester tester, {required String title}) async {
   await tester.tap(find.byTooltip('Create recipe'));
   await tester.pumpAndSettle();
 
-  final chooseImage = find.byKey(const ValueKey<String>('choose-recipe-image'));
-  await tester.ensureVisible(chooseImage);
-  await tester.tap(chooseImage);
-  await tester.pumpAndSettle();
+  await _tapCreatorKey(tester, 'recipe-image-control');
 
   final titleField = find.byKey(const ValueKey<String>('recipe-title-field'));
   await tester.ensureVisible(titleField);
   await tester.enterText(titleField, title);
+  await _tapCreatorKey(tester, 'wizard-continue');
 
   final ingredientName = find.byKey(
-    const ValueKey<String>('ingredient-name-0'),
+    const ValueKey<String>('ingredient-name-field'),
   );
   await tester.ensureVisible(ingredientName);
   await tester.enterText(ingredientName, 'carrots');
   await tester.enterText(
-    find.byKey(const ValueKey<String>('ingredient-quantity-0')),
+    find.byKey(const ValueKey<String>('ingredient-quantity-field')),
     '1',
   );
-  await tester.enterText(
-    find.byKey(const ValueKey<String>('ingredient-unit-0')),
-    'cup',
-  );
+  await tester.tap(find.byKey(const ValueKey<String>('ingredient-unit-field')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(IngredientUnit.cup.label).last);
+  await tester.pumpAndSettle();
+  await _tapCreatorKey(tester, 'save-ingredient');
+  await _tapCreatorKey(tester, 'wizard-continue');
 
-  final steps = find.byKey(const ValueKey<String>('recipe-steps-field'));
-  await tester.ensureVisible(steps);
-  await tester.enterText(steps, 'Chop the carrots.\nCook until tender.');
-  await tester.tap(find.byTooltip('Save recipe'));
+  final step = find.byKey(const ValueKey<String>('preparation-step-field'));
+  await tester.ensureVisible(step);
+  await tester.enterText(step, 'Chop the carrots.');
+  await _tapCreatorKey(tester, 'save-preparation-step');
+  await _tapCreatorKey(tester, 'add-preparation-step');
+  await tester.enterText(step, 'Cook until tender.');
+  await _tapCreatorKey(tester, 'save-preparation-step');
+  await _tapCreatorKey(tester, 'wizard-continue');
+  await _tapCreatorKey(tester, 'save-recipe');
+}
+
+Future<void> _tapCreatorKey(WidgetTester tester, String key) async {
+  final finder = find.byKey(ValueKey<String>(key));
+  await tester.ensureVisible(finder);
+  await tester.tap(finder);
   await tester.pumpAndSettle();
 }
 

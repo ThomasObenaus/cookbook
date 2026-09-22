@@ -1,160 +1,159 @@
 name: Flutter CI
 
 on:
-    pull_request:
-    push: {branches: [main]}
-    workflow_dispatch:
+  pull_request:
+  push: {branches: [main]}
+  workflow_dispatch:
 
 permissions:
-    contents: read
+  contents: read
 
 concurrency:
-    group: flutter-ci-${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+  group: flutter-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-    android-checks:
-        name: Android Checks
-        runs-on: ubuntu-24.04
-        timeout-minutes: 30
-        steps:
-            - name: Check out source
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-              with:
-                  persist-credentials: false
+  android-checks:
+    name: Android Checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
 
-            - name: Set up Java
-              uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
-              with:
-                  distribution: temurin
-                  java-version: "25.0.3"
-                  cache: gradle
-                  cache-dependency-path: |
-                      android/**/*.gradle.kts
-                      android/gradle.properties
-                      android/gradle/wrapper/gradle-wrapper.properties
-                      pubspec.lock
+      - name: Set up Java
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        with:
+          distribution: temurin
+          java-version: "25.0.3"
+          cache: gradle
+          cache-dependency-path: |
+            android/**/*.gradle.kts
+            android/gradle.properties
+            android/gradle/wrapper/gradle-wrapper.properties
+            pubspec.lock
 
-            - name: Set up Flutter
-              uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
-              with:
-                  flutter-version: "3.47.5"
-                  channel: stable
-                  cache: true
-                  pub-cache-key: pub-${{ runner.os }}-${{ runner.arch }}-flutter-3.47.5-${{ hashFiles('pubspec.lock') }}
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: "3.47.5"
+          channel: stable
+          cache: true
+          pub-cache-key: pub-${{ runner.os }}-${{ runner.arch }}-flutter-3.47.5-${{ hashFiles('pubspec.lock') }}
 
-            - name: Set up Android SDK
-              uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
-              with:
-                  packages: platform-tools
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
+        with:
+          packages: platform-tools
 
-            - name: Install Android build dependencies
-              run: |
-                  sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358" "cmake;3.22.1"
-                  flutter config --jdk-dir="$JAVA_HOME"
-                  flutter config --android-sdk="$ANDROID_HOME"
+      - name: Install Android build dependencies
+        run: |
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358" "cmake;3.22.1"
+          flutter config --jdk-dir="$JAVA_HOME"
+          flutter config --android-sdk="$ANDROID_HOME"
 
-            - name: Resolve locked dependencies
-              run: flutter pub get --enforce-lockfile
+      - name: Resolve locked dependencies
+        run: flutter pub get --enforce-lockfile
 
-            - name: Check formatting
-              run: dart format --output=none --set-exit-if-changed .
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
 
-            - name: Analyze
-              run: flutter analyze --no-pub --fatal-infos --fatal-warnings
+      - name: Analyze
+        run: flutter analyze --no-pub --fatal-infos --fatal-warnings
 
-            - name: Test with coverage
-              run: flutter test --no-pub --coverage
+      - name: Test with coverage
+        run: flutter test --no-pub --coverage
 
-            - name: Build debug APK
-              run: flutter build apk --debug --no-pub
+      - name: Build debug APK
+        run: flutter build apk --debug --no-pub
 
-            - name: Upload coverage
-              if: ${{ !cancelled() && hashFiles('coverage/lcov.info') != '' }}
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-              with:
-                  name: coverage
-                  path: coverage/lcov.info
-                  if-no-files-found: error
-                  retention-days: 7
+      - name: Upload coverage
+        if: ${{ !cancelled() && hashFiles('coverage/lcov.info') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 7
 
-            - name: Upload debug APK
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-              with:
-                  name: debug-apk
-                  path: build/app/outputs/flutter-apk/app-debug.apk
-                  if-no-files-found: error
-                  retention-days: 7
+      - name: Upload debug APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
 
-    android-integration:
-        name: Android Integration
-        needs: android-checks
-        runs-on: ubuntu-24.04
-        timeout-minutes: 35
-        steps:
-            - name: Check out source
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-              with:
-                  persist-credentials: false
+  android-integration:
+    name: Android Integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
 
-            - name: Set up Java
-              uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
-              with:
-                  distribution: temurin
-                  java-version: "25.0.3"
-                  cache: gradle
-                  cache-dependency-path: |
-                      android/**/*.gradle.kts
-                      android/gradle.properties
-                      android/gradle/wrapper/gradle-wrapper.properties
-                      pubspec.lock
+      - name: Set up Java
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6
+        with:
+          distribution: temurin
+          java-version: "25.0.3"
+          cache: gradle
+          cache-dependency-path: |
+            android/**/*.gradle.kts
+            android/gradle.properties
+            android/gradle/wrapper/gradle-wrapper.properties
+            pubspec.lock
 
-            - name: Set up Flutter
-              uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
-              with:
-                  flutter-version: "3.47.5"
-                  channel: stable
-                  cache: true
-                  pub-cache-key: pub-${{ runner.os }}-${{ runner.arch }}-flutter-3.47.5-${{ hashFiles('pubspec.lock') }}
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: "3.47.5"
+          channel: stable
+          cache: true
+          pub-cache-key: pub-${{ runner.os }}-${{ runner.arch }}-flutter-3.47.5-${{ hashFiles('pubspec.lock') }}
 
-            - name: Set up Android SDK
-              uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
-              with:
-                  packages: platform-tools
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
+        with:
+          packages: platform-tools
 
-            - name: Install Android build dependencies
-              run: |
-                  sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358" "cmake;3.22.1"
-                  flutter config --jdk-dir="$JAVA_HOME"
-                  flutter config --android-sdk="$ANDROID_HOME"
+      - name: Install Android build dependencies
+        run: |
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358" "cmake;3.22.1"
+          flutter config --jdk-dir="$JAVA_HOME"
+          flutter config --android-sdk="$ANDROID_HOME"
 
-            - name: Resolve locked dependencies
-              run: flutter pub get --enforce-lockfile
+      - name: Resolve locked dependencies
+        run: flutter pub get --enforce-lockfile
 
-            - name: Enable KVM access
-              run: |
-                  test -c /dev/kvm
-                  sudo -n setfacl -m "u:$(id -un):rw" /dev/kvm
-                  test -r /dev/kvm && test -w /dev/kvm
+      - name: Enable KVM access
+        run: |
+          test -c /dev/kvm
+          sudo -n setfacl -m "u:$(id -un):rw" /dev/kvm
+          test -r /dev/kvm && test -w /dev/kvm
 
-            - name: Run Android integration tests
-              uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
-              with:
-                  api-level: "36"
-                  target: google_apis
-                  arch: x86_64
-                  emulator-port: "5554"
-                  emulator-boot-timeout: "600"
-                  disable-linux-hw-accel: "false"
-                  disable-animations: "true"
-                  emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-                  script: bash .github/scripts/android-integration.sh
+      - name: Run Android integration tests
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: "36"
+          target: google_apis
+          arch: x86_64
+          emulator-port: "5554"
+          emulator-boot-timeout: "600"
+          disable-linux-hw-accel: "false"
+          disable-animations: "true"
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: bash .github/scripts/android-integration.sh
 
-            - name: Upload integration logs
-              if: ${{ !cancelled() && hashFiles('build/integration-logs/**') != '' }}
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-              with:
-                  name: android-integration-logs
-                  path: build/integration-logs/
-                  if-no-files-found: error
-                  retention-days: 7
+      - name: Upload integration logs
+        if: ${{ !cancelled() && hashFiles('build/integration-logs/**') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: android-integration-logs
+          path: build/integration-logs/
+          if-no-files-found: error
+          retention-days: 7
