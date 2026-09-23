@@ -4,8 +4,9 @@ Source: [description.md](description.md). Implementation: [steps1.md](steps1.md)
 
 Planning date: 2026-09-23. This pair supersedes the Google Keep design in
 [plan.md](plan.md) and [steps.md](steps.md), which remain unchanged as history.
-Requirement IDs below apply to this revised scope. Planning only; no application
-code has been changed and no implementation steps have been completed.
+Requirement IDs below apply to this revised scope. Implementation has started:
+step 1 (shopping items and shared formatting) is complete. Steps 2-6 remain
+pending; the shopping-list workflow is not yet available in the app.
 
 ## Goal And Scope
 
@@ -162,14 +163,15 @@ needed for the final Android integration/manual checks, not for unit/widget test
   errors. Manually verify adding/checking/removing offline, full process restart,
   compact layout, and accessibility. Report unavailable checks explicitly.
 
-Only planning-document checks are performed now; the tests above are future work.
+Step-1 tests and analysis have passed; see [steps1.md](steps1.md) for results.
+Persistence, navigation, and complete workflow verification remain future work.
 
 ## Assumptions And Open Questions
 
 - Confirmed change: use an in-app shopping list instead of Google Keep.
-- Proposed defaults, recorded in the description: one persisted list, check/uncheck
+- Accepted implementation defaults, recorded in the description: one persisted list, check/uncheck
   and individual deletion, ingredient notes preserved, duplicate batches allowed,
-  no automatic aggregation. Confirm or adjust before implementing affected steps.
+  no automatic aggregation.
 - Android remains the target based on the existing app. Device-local storage
   does not promise multi-device sync, export, or recovery after uninstall.
 - No blocking external dependencies remain for this design. Existing Keep plans

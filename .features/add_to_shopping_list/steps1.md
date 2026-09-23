@@ -3,15 +3,15 @@
 Source: [description.md](description.md). Design and acceptance criteria:
 [plan1.md](plan1.md). This checklist supersedes [steps.md](steps.md).
 
-Planning only. All steps are unchecked. Confirm the proposed defaults in the
-description before implementation; execute one cohesive change at a time.
-New components and their test files named below are proposed, not yet created.
+Implementation status: step 1 is complete; steps 2-6 remain pending. The user's
+implementation request accepts the defaults in the description. Execute one
+cohesive change at a time; components in pending steps remain proposed.
 
 ## Ordered Checklist
 
 ### 1. Define Shopping Items And Shared Formatting
 
-- [ ] Introduce immutable shopping items and reuse ingredient display formatting.
+- [x] Introduce immutable shopping items and reuse ingredient display formatting.
 
 Requirements: R2, R4, R6. Prerequisites: confirm single-list, note-preservation,
 and duplicate-handling defaults.
@@ -29,6 +29,14 @@ ingredients. Retain the existing detail rendering assertions.
 Verification: `flutter test test/features/recipe_catalog` and
 `flutter test test/features/shopping_list` after creating that test directory.
 Complete when formatting is unchanged and item snapshots serialize without loss.
+
+Completed 2026-09-23: immutable item snapshots, checked-state copies, validated
+JSON serialization, and shared formatting are implemented. The combined command
+`flutter test test/features/recipe_catalog test/features/shopping_list` passed
+all 69 tests, and `make analyze` passed. Changed Dart files were formatted.
+Hot reload was attempted after DTD discovery/connection, but no app was running.
+Committed-diff review and PR work remain pending because these changes are not
+committed or pushed.
 
 ### 2. Persist Shopping-List Mutations
 
@@ -149,5 +157,5 @@ Verification after focused tests pass:
 
 Complete only with observed results for every criterion. Record unavailable
 device/manual checks as pending, not passed. Follow repository review/PR gates
-when later applicable; do not commit merely to enable review. None of these
-implementation checks have been run during this planning task.
+when later applicable; do not commit merely to enable review. The complete
+workflow checks remain pending; step-1 verification is recorded above.

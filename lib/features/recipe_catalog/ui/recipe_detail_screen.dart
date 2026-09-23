@@ -1,3 +1,4 @@
+import 'package:cookbook/features/recipe_catalog/logic/format_ingredient.dart';
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
 import 'package:cookbook/features/recipe_catalog/ui/recipe_image_view.dart';
 import 'package:flutter/material.dart';
@@ -163,7 +164,7 @@ class _IngredientRow extends StatelessWidget {
             child: Icon(Icons.circle, size: 8),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text(_formatIngredient(ingredient))),
+          Expanded(child: Text(formatIngredient(ingredient))),
         ],
       ),
     );
@@ -206,17 +207,4 @@ class _StepRow extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatIngredient(Ingredient ingredient) {
-  final parts = <String?>[ingredient.quantity, ingredient.unit, ingredient.name]
-      .whereType<String>()
-      .map((part) => part.trim())
-      .where((part) => part.isNotEmpty);
-  final ingredientText = parts.join(' ');
-  final note = ingredient.note?.trim();
-
-  return note == null || note.isEmpty
-      ? ingredientText
-      : '$ingredientText ($note)';
 }
