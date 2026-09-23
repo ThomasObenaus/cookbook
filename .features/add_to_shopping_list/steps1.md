@@ -3,9 +3,9 @@
 Source: [description.md](description.md). Design and acceptance criteria:
 [plan1.md](plan1.md). This checklist supersedes [steps.md](steps.md).
 
-Implementation status: step 1 is complete; steps 2-6 remain pending. The user's
-implementation request accepts the defaults in the description. Execute one
-cohesive change at a time; components in pending steps remain proposed.
+Implementation status: steps 1-5 and the automated portion of step 6 are complete.
+The user's implementation request accepts the defaults in the description.
+Remaining manual checks and committed-diff review are recorded below.
 
 ## Ordered Checklist
 
@@ -35,12 +35,12 @@ JSON serialization, and shared formatting are implemented. The combined command
 `flutter test test/features/recipe_catalog test/features/shopping_list` passed
 all 69 tests, and `make analyze` passed. Changed Dart files were formatted.
 Hot reload was attempted after DTD discovery/connection, but no app was running.
-Committed-diff review and PR work remain pending because these changes are not
-committed or pushed.
+Step 1 was subsequently committed and reviewed with no supported findings.
+The remaining implementation below is not covered by that earlier review.
 
 ### 2. Persist Shopping-List Mutations
 
-- [ ] Implement the local shopping-list repository with serialized batch writes.
+- [x] Implement the local shopping-list repository with serialized batch writes.
 
 Requirements: R2, R4, R5, R6, R7, R8. Prerequisite: step 1.
 
@@ -62,9 +62,14 @@ Verification: `flutter test test/features/shopping_list` and `make analyze`.
 Complete when every operation preserves unrelated items, one recipe adds in one
 committed batch, and restart tests reproduce the exact saved list.
 
+Completed 2026-09-23: the versioned local repository implements atomic batch
+append, check/uncheck, and removal with serialized writes. Nine repository tests
+passed, including corruption preservation, write failures, ordering, recovery,
+and fresh-instance restoration. Mutations return their confirmed saved snapshot.
+
 ### 3. Compose Shared Shopping-List State
 
-- [ ] Inject one repository and coordinate home-owned list state and callbacks.
+- [x] Inject one repository and coordinate home-owned list state and callbacks.
 
 Requirements: R3, R4, R5, R6, R7, R8. Prerequisite: step 2.
 
@@ -72,8 +77,9 @@ Change: compose the repository in [app startup](../../lib/main.dart), pass it
 through `CookbookApp` to [home](../../lib/app/cookbook_home_screen.dart), and add
 home-owned snapshot/status state and async mutation callbacks. Load outside build,
 guard lifecycle changes, and prevent stale refreshes or overlapping state updates.
-Refresh after committed writes and keep shopping errors isolated from other tabs.
-A post-save refresh error must never invite a duplicate append retry.
+Publish the confirmed snapshot returned by each committed write and keep shopping
+errors isolated from other tabs. No second read follows a save, avoiding ambiguous
+post-save refresh failures and duplicate append retries.
 
 Tests: extend [home tests](../../test/app/cookbook_home_screen_test.dart) and
 [startup/widget tests](../../test/widget_test.dart) with injected fakes. Cover
@@ -85,9 +91,14 @@ Verification: `flutter test test/app test/widget_test.dart` and `make analyze`.
 Complete when one shared repository/state owner serves all intended actions and
 failures do not prevent Cookbook startup or offline recipe browsing.
 
+Completed 2026-09-23: startup injects the repository; home owns and disposes a
+built-in ChangeNotifier controller. Six controller tests cover saved-only state,
+load/write failures, busy guards, disposal, and no post-save reads. App tests
+confirm shopping storage failure does not block recipe browsing.
+
 ### 4. Add The Shopping List View
 
-- [ ] Expose the persistent checklist as a third navigation destination.
+- [x] Expose the persistent checklist as a third navigation destination.
 
 Requirements: R3, R4, R5, R7, R8. Prerequisite: step 3.
 
@@ -106,9 +117,14 @@ Verification: `flutter test test/features/shopping_list test/app`.
 Complete when the list is independently navigable and each check/remove affects
 only its intended stable item, with no clipped controls or stale success states.
 
+Completed 2026-09-23: Shopping list is the third destination. Five focused view
+tests cover loading/empty/retry, duplicate identity, check/uncheck/removal, failed
+writes, busy controls, and 320-dp/200% text. Home tests preserve recipe search and
+scroll position plus the planner's selected week and scroll position across tabs.
+
 ### 5. Wire Recipe Ingredients Into The List
 
-- [ ] Add the recipe-detail action with saved-result feedback and busy protection.
+- [x] Add the recipe-detail action with saved-result feedback and busy protection.
 
 Requirements: R1, R2, R7, R8. Prerequisites: steps 1-4.
 
@@ -129,9 +145,15 @@ Verification: `flutter test test/features/recipe_catalog test/app`.
 Complete when every ingredient appears unchecked in the list after a successful
 add, previous entries are preserved, and failed saves never report success.
 
+Completed 2026-09-23: the detail action forwards one immutable batch through the
+catalog to shared state. Seven detail tests and six home tests passed, covering
+ordered ingredient data, repeat taps, deliberate duplicates, failures/retry,
+navigation during saving, compact large-text layouts, and cross-tab freshness.
+
 ### 6. Verify The Complete Offline Workflow
 
-- [ ] Add cross-screen persistence coverage and run the required checks.
+- [x] Add cross-screen persistence coverage and run the automated checks.
+- [ ] Complete manual offline, full-process-restart, and accessibility checks.
 
 Requirements: R1, R2, R3, R4, R5, R6, R7, R8. Prerequisites: steps 1-5.
 
@@ -157,5 +179,32 @@ Verification after focused tests pass:
 
 Complete only with observed results for every criterion. Record unavailable
 device/manual checks as pending, not passed. Follow repository review/PR gates
-when later applicable; do not commit merely to enable review. The complete
-workflow checks remain pending; step-1 verification is recorded above.
+when later applicable; do not commit merely to enable review.
+
+Observed 2026-09-23:
+
+- `dart format --output=none --set-exit-if-changed lib test integration_test`:
+  passed, 64 files checked with no changes.
+- `make analyze`: passed with no issues.
+- `make test`: all 176 Flutter tests and five deployment-selector tests passed.
+- `make integration-test DEVICE=5000AF1001008153`: passed on Armor 10 5G,
+  Android 10, after unlocking the phone. The first locked-device attempt was
+  stopped and is not counted as a pass.
+- Integration coverage uses temporary storage: recipe creation, two ingredient
+  batches, check/uncheck, independent duplicate removal, then new app/repository
+  instances restoring exact order, values, checked states, and deletion. Existing
+  recipe and meal-plan regressions also passed. This is app recreation within
+  the test process, not an OS process restart.
+- The normal app was built and launched on the same phone. Hot reload succeeded;
+  the runtime-error tool reported no errors.
+- No package, Google dependency, or network setup was added. Automated tests did
+  not alter the user's saved shopping list.
+
+Pending: a manual airplane-mode add/check/remove flow, full OS process restart,
+and on-device compact/large-text and screen-reader inspection. Compact layout
+and accessible labels already have automated widget coverage, but that is not a
+manual accessibility pass.
+
+The new implementation is uncommitted. The committed `main...HEAD` review prompt
+cannot inspect it yet; review and PR updates remain pending. No commit or push
+was made, and the earlier root review report was left unchanged.
