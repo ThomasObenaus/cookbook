@@ -1,7 +1,10 @@
 import 'dart:io';
 
+import 'package:cookbook/app/cookbook_home_screen.dart';
+import 'package:cookbook/features/meal_planner/data/local_meal_plan_repository.dart';
+import 'package:cookbook/features/meal_planner/data/meal_plan_repository.dart';
+import 'package:cookbook/features/meal_planner/ui/weekly_meal_planner_screen.dart';
 import 'package:cookbook/features/recipe_catalog/data/asset_recipe_repository.dart';
-import 'package:cookbook/features/recipe_catalog/ui/recipe_catalog_screen.dart';
 import 'package:cookbook/features/recipe_creator/data/gallery_recipe_image_picker.dart';
 import 'package:cookbook/features/recipe_creator/data/local_recipe_repository.dart';
 import 'package:cookbook/features/recipe_creator/data/mutable_recipe_repository.dart';
@@ -27,9 +30,14 @@ Future<Widget> createCookbookApp({
       applicationSupportDirectory: supportDirectory,
       createId: const Uuid().v4,
     );
+    final mealPlanRepository = LocalMealPlanRepository(
+      applicationSupportDirectory: supportDirectory,
+    );
     return CookbookApp(
       repository: repository,
+      mealPlanRepository: mealPlanRepository,
       imagePicker: GalleryRecipeImagePicker(),
+      currentDateProvider: DateTime.now,
     );
   } catch (_) {
     return const CookbookStartupFailureApp();
@@ -64,12 +72,16 @@ class CookbookStartupFailureApp extends StatelessWidget {
 class CookbookApp extends StatelessWidget {
   const CookbookApp({
     required this.repository,
+    required this.mealPlanRepository,
     required this.imagePicker,
+    required this.currentDateProvider,
     super.key,
   });
 
   final MutableRecipeRepository repository;
+  final MealPlanRepository mealPlanRepository;
   final RecipeImagePicker imagePicker;
+  final CurrentDateProvider currentDateProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -77,9 +89,11 @@ class CookbookApp extends StatelessWidget {
       title: 'Cookbook',
       debugShowCheckedModeBanner: false,
       theme: _cookbookTheme(),
-      home: RecipeCatalogScreen(
-        repository: repository,
+      home: CookbookHomeScreen(
+        recipeRepository: repository,
+        mealPlanRepository: mealPlanRepository,
         imagePicker: imagePicker,
+        currentDateProvider: currentDateProvider,
       ),
     );
   }

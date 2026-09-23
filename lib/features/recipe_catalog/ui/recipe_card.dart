@@ -3,10 +3,16 @@ import 'package:cookbook/features/recipe_catalog/ui/recipe_image_view.dart';
 import 'package:flutter/material.dart';
 
 class RecipeCard extends StatelessWidget {
-  const RecipeCard({required this.recipe, required this.onTap, super.key});
+  const RecipeCard({
+    required this.recipe,
+    required this.onTap,
+    this.semanticLabel,
+    super.key,
+  });
 
   final Recipe recipe;
   final VoidCallback onTap;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -14,8 +20,9 @@ class RecipeCard extends StatelessWidget {
       button: true,
       onTap: onTap,
       label:
+          semanticLabel ??
           'Open ${recipe.name}, ${recipe.totalMinutes} minutes, '
-          'serves ${recipe.servings}',
+              'serves ${recipe.servings}',
       child: ExcludeSemantics(
         child: Card(
           clipBehavior: Clip.antiAlias,
