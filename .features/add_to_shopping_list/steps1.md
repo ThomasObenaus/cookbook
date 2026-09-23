@@ -5,7 +5,7 @@ Source: [description.md](description.md). Design and acceptance criteria:
 
 Implementation status: steps 1-5 and the automated portion of step 6 are complete.
 The user's implementation request accepts the defaults in the description.
-Remaining manual checks and committed-diff review are recorded below.
+Remaining manual checks and completed review/PR results are recorded below.
 
 ## Ordered Checklist
 
@@ -36,7 +36,7 @@ JSON serialization, and shared formatting are implemented. The combined command
 all 69 tests, and `make analyze` passed. Changed Dart files were formatted.
 Hot reload was attempted after DTD discovery/connection, but no app was running.
 Step 1 was subsequently committed and reviewed with no supported findings.
-The remaining implementation below is not covered by that earlier review.
+The full implementation below has now received a separate committed-diff review.
 
 ### 2. Persist Shopping-List Mutations
 
@@ -205,6 +205,9 @@ and on-device compact/large-text and screen-reader inspection. Compact layout
 and accessible labels already have automated widget coverage, but that is not a
 manual accessibility pass.
 
-The new implementation is uncommitted. The committed `main...HEAD` review prompt
-cannot inspect it yet; review and PR updates remain pending. No commit or push
-was made, and the earlier root review report was left unchanged.
+The implementation was committed and pushed during the session. The complete
+3,092-line `main...HEAD` diff was reviewed with no supported actionable findings.
+The root [review report](../../REVIEW.md) was refreshed and passed its validator.
+The repository PR workflow succeeded: [PR #18](https://github.com/ThomasObenaus/cookbook/pull/18).
+The assistant did not commit or push changes. Local documentation/report updates
+are included in the PR only after they are committed and pushed separately.

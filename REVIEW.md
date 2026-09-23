@@ -14,12 +14,12 @@ None.
 
 ## Title
 
-Add shopping-list item model and shared ingredient formatting
+Add a persistent in-app shopping list
 
 ## summary
 
-Introduce immutable shopping-list items with validated JSON serialization and checked-state copying. Extract ingredient formatting without changing recipe-detail output and add focused tests. Add a reusable feature-planning prompt and document the transition from Google Keep to a local shopping list; persistence and UI remain pending.
+Add a locally persisted shopping list with recipe ingredient batches, independent checkboxes and removal, shared state, and saved-result feedback. Preserve ingredient formatting, notes, order, and deliberate duplicates. Cover storage failures, navigation, and restoration with unit, widget, and Android integration tests. Include feature-planning documentation and a reusable planning prompt.
 
 ### Why
 
-Establish the data and formatting foundation for an offline, in-app shopping list after replacing the unsupported Google Keep integration.
+Let users collect recipe ingredients and track purchases offline inside Cookbook, without the unsupported Google Keep integration or account setup.

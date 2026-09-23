@@ -6,8 +6,8 @@ Planning date: 2026-09-23. This pair supersedes the Google Keep design in
 [plan.md](plan.md) and [steps.md](steps.md), which remain unchanged as history.
 Requirement IDs below apply to this revised scope. Steps 1-5 and automated
 workflow verification are implemented. The shopping-list workflow is available;
-manual checks and committed-diff review remain pending. See [steps1.md](steps1.md)
-for observed verification results and remaining gates.
+committed-diff review and PR creation are complete. See [steps1.md](steps1.md)
+for observed verification results and the remaining manual checks.
 
 ## Goal And Scope
 
@@ -169,7 +169,8 @@ needed for the final Android integration/manual checks, not for unit/widget test
 
 All 176 Flutter tests, five tooling tests, strict analysis, formatting, and the
 Android integration scenario passed. Hot reload succeeded with no runtime errors.
-See [steps1.md](steps1.md) for the remaining manual and review/PR gates.
+Committed-diff review found no supported actionable issues, and PR #18 is open.
+See [steps1.md](steps1.md) for the remaining manual checks and PR link.
 
 ## Assumptions And Open Questions
 
