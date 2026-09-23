@@ -5,6 +5,14 @@ in a separate repository.
 
 Display name: **Cookbook**. Android application ID: `com.thomaso.cookbook`.
 
+## Shopping List
+
+Recipe details include **Add to shopping list**. The **Shopping list** tab keeps
+ingredient quantities, units, and notes, and supports checking and removing
+individual entries. Repeated additions create separate entries without merging
+quantities. The list is saved on the device and needs no account or network;
+it is not synchronized or backed up by this feature.
+
 ## Project Layout
 
 - `lib/`: Dart application code; entry point is `lib/main.dart`.

@@ -10,6 +10,8 @@ import 'package:cookbook/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'features/shopping_list/fake_shopping_list_repository.dart';
+
 void main() {
   testWidgets('app launches into the recipe catalogue', (tester) async {
     await tester.pumpWidget(
@@ -29,6 +31,8 @@ void main() {
           ),
         ]),
         mealPlanRepository: const _EmptyMealPlanRepository(),
+        shoppingListRepository: FakeShoppingListRepository()
+          ..loadError = StateError('storage'),
         imagePicker: const _FakePicker(),
         currentDateProvider: () => DateTime(2026, 9, 22),
       ),

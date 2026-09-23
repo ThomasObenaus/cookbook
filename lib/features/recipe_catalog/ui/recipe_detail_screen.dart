@@ -1,11 +1,19 @@
+import 'package:cookbook/features/recipe_catalog/logic/format_ingredient.dart';
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
 import 'package:cookbook/features/recipe_catalog/ui/recipe_image_view.dart';
 import 'package:flutter/material.dart';
 
+typedef AddIngredients = Future<bool> Function(List<Ingredient> ingredients);
+
 class RecipeDetailScreen extends StatelessWidget {
-  const RecipeDetailScreen({required this.recipe, super.key});
+  const RecipeDetailScreen({
+    required this.recipe,
+    this.onAddIngredients,
+    super.key,
+  });
 
   final Recipe recipe;
+  final AddIngredients? onAddIngredients;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +55,11 @@ class RecipeDetailScreen extends StatelessWidget {
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 12),
+                      _AddIngredientsButton(
+                        ingredients: recipe.ingredients,
+                        onAdd: onAddIngredients,
+                      ),
+                      const SizedBox(height: 12),
                       for (
                         var index = 0;
                         index < recipe.ingredients.length;
@@ -77,6 +90,81 @@ class RecipeDetailScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AddIngredientsButton extends StatefulWidget {
+  const _AddIngredientsButton({required this.ingredients, required this.onAdd});
+
+  final List<Ingredient> ingredients;
+  final AddIngredients? onAdd;
+
+  @override
+  State<_AddIngredientsButton> createState() => _AddIngredientsButtonState();
+}
+
+class _AddIngredientsButtonState extends State<_AddIngredientsButton> {
+  bool _saving = false;
+  bool _failed = false;
+
+  Future<void> _add() async {
+    final onAdd = widget.onAdd;
+    if (_saving || onAdd == null) return;
+    setState(() {
+      _saving = true;
+      _failed = false;
+    });
+    var saved = false;
+    try {
+      saved = await onAdd(List<Ingredient>.unmodifiable(widget.ingredients));
+    } catch (_) {
+      saved = false;
+    }
+    if (!mounted) return;
+    setState(() {
+      _saving = false;
+      _failed = !saved;
+    });
+    if (saved) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Ingredients added to shopping list.')),
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        FilledButton.icon(
+          key: const ValueKey<String>('add-to-shopping-list'),
+          onPressed: _saving || widget.onAdd == null ? null : _add,
+          icon: _saving
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.add_shopping_cart),
+          label: const Text(
+            'Add to shopping list',
+            textAlign: TextAlign.center,
+          ),
+        ),
+        if (_failed)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Semantics(
+              liveRegion: true,
+              child: const Text(
+                'Ingredients could not be added. Please try again.',
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -163,7 +251,7 @@ class _IngredientRow extends StatelessWidget {
             child: Icon(Icons.circle, size: 8),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text(_formatIngredient(ingredient))),
+          Expanded(child: Text(formatIngredient(ingredient))),
         ],
       ),
     );
@@ -206,17 +294,4 @@ class _StepRow extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatIngredient(Ingredient ingredient) {
-  final parts = <String?>[ingredient.quantity, ingredient.unit, ingredient.name]
-      .whereType<String>()
-      .map((part) => part.trim())
-      .where((part) => part.isNotEmpty);
-  final ingredientText = parts.join(' ');
-  final note = ingredient.note?.trim();
-
-  return note == null || note.isEmpty
-      ? ingredientText
-      : '$ingredientText ($note)';
 }

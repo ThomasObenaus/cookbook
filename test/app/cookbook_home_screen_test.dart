@@ -14,7 +14,55 @@ import 'package:cookbook/features/recipe_creator/ui/recipe_creator_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../features/shopping_list/fake_shopping_list_repository.dart';
+
 void main() {
+  testWidgets(
+    'recipe additions update the existing tab and preserve previous items',
+    (tester) async {
+      final repository = FakeShoppingListRepository();
+      await repository.appendIngredients([const Ingredient(name: 'pepper')]);
+      await repository.setChecked(id: 'item-1', checked: true);
+      await tester.pumpWidget(_testApp(shoppingListRepository: repository));
+      await tester.pumpAndSettle();
+      final destination = find.byKey(
+        const ValueKey<String>('shopping-list-destination'),
+      );
+      await tester.tap(destination);
+      await tester.pumpAndSettle();
+      expect(find.text('pepper'), findsOneWidget);
+      for (var batch = 0; batch < 2; batch++) {
+        await tester.tap(find.text('Recipes'));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const ValueKey<String>('recipe-card-family-soup')),
+        );
+        await tester.pumpAndSettle();
+        final button = find.byKey(
+          const ValueKey<String>('add-to-shopping-list'),
+        );
+        await tester.ensureVisible(button);
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+        await tester.tap(destination);
+        await tester.pumpAndSettle();
+        expect(find.text('salt'), findsNWidgets(batch + 1));
+        expect(
+          tester
+              .widget<Checkbox>(
+                find.byKey(const ValueKey<String>('shopping-check-item-1')),
+              )
+              .value,
+          isTrue,
+        );
+        expect(repository.items.skip(1).every((item) => !item.checked), isTrue);
+      }
+      expect(repository.loadCount, 1);
+    },
+  );
+
   testWidgets('opens on Recipes and switches primary destinations', (
     tester,
   ) async {
@@ -26,6 +74,14 @@ void main() {
     );
     expect(navigation, findsOneWidget);
     expect(tester.widget<NavigationBar>(navigation).selectedIndex, 0);
+    await tester.tap(
+      find.byKey(const ValueKey<String>('shopping-list-destination')),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.widget<NavigationBar>(navigation).selectedIndex, 2);
+    expect(find.text('Your shopping list is empty.'), findsOneWidget);
+    await tester.tap(find.text('Recipes'));
+    await tester.pumpAndSettle();
     expect(find.text('Recipes'), findsNWidgets(2));
 
     await tester.tap(find.text('Meal plan'));
@@ -75,6 +131,12 @@ void main() {
     await tester.pumpAndSettle();
     final plannerOffset = _scrollOffset(tester, planner);
     expect(plannerOffset, greaterThan(0));
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('shopping-list-destination')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Your shopping list is empty.'), findsOneWidget);
 
     await tester.tap(find.text('Recipes'));
     await tester.pumpAndSettle();
@@ -192,6 +254,7 @@ void main() {
 Widget _testApp({
   _TestRecipeRepository? recipeRepository,
   MealPlanRepository? mealPlanRepository,
+  FakeShoppingListRepository? shoppingListRepository,
 }) {
   return MaterialApp(
     theme: ThemeData(
@@ -204,6 +267,8 @@ Widget _testApp({
             _recipe('family-soup', 'Family Soup'),
           ]),
       mealPlanRepository: mealPlanRepository ?? _TestMealPlanRepository(),
+      shoppingListRepository:
+          shoppingListRepository ?? FakeShoppingListRepository(),
       imagePicker: const _FakePicker(),
       currentDateProvider: () => DateTime(2026, 9, 22),
     ),

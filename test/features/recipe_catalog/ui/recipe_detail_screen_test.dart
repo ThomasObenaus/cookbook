@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
 import 'package:cookbook/features/recipe_catalog/models/recipe_image.dart';
 import 'package:cookbook/features/recipe_catalog/ui/recipe_catalog_screen.dart';
@@ -9,6 +11,142 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets(
+    'adds the exact ordered snapshot and permits later duplicate batches',
+    (tester) async {
+      final recipe = _fullRecipe();
+      final batches = <List<Ingredient>>[];
+      await tester.pumpWidget(
+        _testApp(
+          RecipeDetailScreen(
+            recipe: recipe,
+            onAddIngredients: (ingredients) async {
+              batches.add(ingredients);
+              return true;
+            },
+          ),
+        ),
+      );
+      final button = find.byKey(const ValueKey<String>('add-to-shopping-list'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      expect(
+        batches.single.map((item) => item.toJson()),
+        recipe.ingredients.map((item) => item.toJson()),
+      );
+      expect(() => batches.single.clear(), throwsUnsupportedError);
+      expect(find.text('Ingredients added to shopping list.'), findsOneWidget);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      expect(batches, hasLength(2));
+    },
+  );
+
+  testWidgets('blocks repeated taps until persistence confirms success', (
+    tester,
+  ) async {
+    final save = Completer<bool>();
+    var calls = 0;
+    await tester.pumpWidget(
+      _testApp(
+        RecipeDetailScreen(
+          recipe: _fullRecipe(),
+          onAddIngredients: (_) {
+            calls++;
+            return save.future;
+          },
+        ),
+      ),
+    );
+    final button = find.byKey(const ValueKey<String>('add-to-shopping-list'));
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await tester.tap(button);
+    await tester.pump();
+    expect(calls, 1);
+    expect(tester.widget<FilledButton>(button).onPressed, isNull);
+    expect(find.text('Ingredients added to shopping list.'), findsNothing);
+    save.complete(true);
+    await tester.pumpAndSettle();
+    expect(find.text('Ingredients added to shopping list.'), findsOneWidget);
+  });
+
+  testWidgets('failed additions show an error and can be retried', (
+    tester,
+  ) async {
+    var calls = 0;
+    await tester.pumpWidget(
+      _testApp(
+        RecipeDetailScreen(
+          recipe: _fullRecipe(),
+          onAddIngredients: (_) async {
+            calls++;
+            if (calls == 1) return false;
+            if (calls == 2) throw StateError('storage');
+            return true;
+          },
+        ),
+      ),
+    );
+    final button = find.byKey(const ValueKey<String>('add-to-shopping-list'));
+    await tester.ensureVisible(button);
+    for (var attempt = 0; attempt < 2; attempt++) {
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Ingredients could not be added. Please try again.'),
+        findsOneWidget,
+      );
+      expect(find.text('Ingredients added to shopping list.'), findsNothing);
+    }
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    expect(find.text('Ingredients added to shopping list.'), findsOneWidget);
+    expect(
+      find.text('Ingredients could not be added. Please try again.'),
+      findsNothing,
+    );
+  });
+
+  testWidgets(
+    'leaving details during save does not report on a disposed route',
+    (tester) async {
+      final save = Completer<bool>();
+      await tester.pumpWidget(
+        _testApp(
+          Builder(
+            builder: (context) {
+              return TextButton(
+                onPressed: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => RecipeDetailScreen(
+                      recipe: _fullRecipe(),
+                      onAddIngredients: (_) => save.future,
+                    ),
+                  ),
+                ),
+                child: const Text('Open recipe'),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open recipe'));
+      await tester.pumpAndSettle();
+      final button = find.byKey(const ValueKey<String>('add-to-shopping-list'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pump();
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      save.complete(true);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('Ingredients added to shopping list.'), findsNothing);
+    },
+  );
+
   testWidgets('displays every recipe field and ordered step number', (
     tester,
   ) async {
@@ -43,9 +181,21 @@ void main() {
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
     await tester.pumpWidget(
-      _testApp(RecipeDetailScreen(recipe: _fullRecipe())),
+      _testApp(
+        RecipeDetailScreen(
+          recipe: _fullRecipe(),
+          onAddIngredients: (_) async => true,
+        ),
+      ),
     );
     await tester.pumpAndSettle();
+
+    final button = find.byKey(const ValueKey<String>('add-to-shopping-list'));
+    await tester.ensureVisible(button);
+    expect(find.bySemanticsLabel('Add to shopping list'), findsOneWidget);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    expect(find.text('Ingredients added to shopping list.'), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.text('Plate and serve.'),
