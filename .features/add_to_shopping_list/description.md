@@ -1,12 +1,23 @@
-The user should be able to put the ingredients of a recipe to a shopping list.
+# In-App Shopping List
 
-# First increment
+The user should be able to add the ingredients of a recipe to a shopping list
+inside the app.
 
-- In a recipe detail screen, the user should have a button add to shopping list
-- when clicking this button the ingredients (including the quantity and unit) of the recipe should be added to the shopping list
-- the shoppinglist should be a dedicated list on google notes
-- the user should be able to configure he google notes list he wants to use as shopping list
-- that configuration including the login into the users google account should be in a separate settings screen
-- if the user is not yet connected to a google notes list, then the add to shopping list button on the recipe should be grayed out with a dedicated information/tooltip saying why the functionality is not yet available
-- on the settingsscreen the user should be able to connect to its google account
-- after successful connect he should see a dropdown or list of the google notes notes he has to be able to select one as the shopping list
+## First Increment
+
+- The recipe detail screen has an "Add to shopping list" button.
+- Pressing it adds all recipe ingredients, including their quantity and unit when provided, to the app's shopping list.
+- A dedicated Shopping list view is accessible from the app's main navigation.
+- No Google Keep integration, account login, list selection, or integration settings screen is required. The feature works offline.
+
+## Proposed Defaults
+
+- Use one shopping list, stored locally and retained after restarting the app.
+- Users can check/uncheck purchased items and remove individual items.
+- Preserve ingredient order and optional notes. Existing entries remain intact; adding another recipe appends its ingredients as unchecked entries.
+- Do not merge duplicate ingredients or convert units. Adding the same recipe again intentionally appends another set of entries.
+- Show loading, empty, and recoverable error states. Report a successful addition only after it has been saved, and prevent repeated presses while saving.
+- Manual item creation/editing, multiple lists, sharing, synchronization, and bulk clearing are outside this increment.
+
+Current planning documents: [plan1.md](plan1.md) and [steps1.md](steps1.md).
+The earlier plan and steps describe the superseded Google Keep approach.
