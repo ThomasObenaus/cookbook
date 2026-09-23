@@ -9,6 +9,8 @@ import 'package:cookbook/features/recipe_creator/data/gallery_recipe_image_picke
 import 'package:cookbook/features/recipe_creator/data/local_recipe_repository.dart';
 import 'package:cookbook/features/recipe_creator/data/mutable_recipe_repository.dart';
 import 'package:cookbook/features/recipe_creator/data/recipe_image_picker.dart';
+import 'package:cookbook/features/shopping_list/data/local_shopping_list_repository.dart';
+import 'package:cookbook/features/shopping_list/data/shopping_list_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -36,6 +38,10 @@ Future<Widget> createCookbookApp({
     return CookbookApp(
       repository: repository,
       mealPlanRepository: mealPlanRepository,
+      shoppingListRepository: LocalShoppingListRepository(
+        applicationSupportDirectory: supportDirectory,
+        createId: const Uuid().v4,
+      ),
       imagePicker: GalleryRecipeImagePicker(),
       currentDateProvider: DateTime.now,
     );
@@ -73,6 +79,7 @@ class CookbookApp extends StatelessWidget {
   const CookbookApp({
     required this.repository,
     required this.mealPlanRepository,
+    required this.shoppingListRepository,
     required this.imagePicker,
     required this.currentDateProvider,
     super.key,
@@ -80,6 +87,7 @@ class CookbookApp extends StatelessWidget {
 
   final MutableRecipeRepository repository;
   final MealPlanRepository mealPlanRepository;
+  final ShoppingListRepository shoppingListRepository;
   final RecipeImagePicker imagePicker;
   final CurrentDateProvider currentDateProvider;
 
@@ -92,6 +100,7 @@ class CookbookApp extends StatelessWidget {
       home: CookbookHomeScreen(
         recipeRepository: repository,
         mealPlanRepository: mealPlanRepository,
+        shoppingListRepository: shoppingListRepository,
         imagePicker: imagePicker,
         currentDateProvider: currentDateProvider,
       ),

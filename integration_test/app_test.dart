@@ -8,6 +8,7 @@ import 'package:cookbook/features/recipe_catalog/ui/recipe_image_view.dart';
 import 'package:cookbook/features/recipe_creator/data/local_recipe_repository.dart';
 import 'package:cookbook/features/recipe_creator/data/recipe_image_picker.dart';
 import 'package:cookbook/features/recipe_creator/models/ingredient_unit.dart';
+import 'package:cookbook/features/shopping_list/data/local_shopping_list_repository.dart';
 import 'package:cookbook/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +18,7 @@ import 'package:integration_test/integration_test.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('family recipes and meal plans survive an app restart', (
+  testWidgets('recipes, meal plans and shopping items survive app recreation', (
     tester,
   ) async {
     final supportDirectory = await Directory.systemTemp.createTemp(
@@ -44,11 +45,17 @@ void main() {
     final mealPlanRepository = LocalMealPlanRepository(
       applicationSupportDirectory: supportDirectory,
     );
+    var nextShoppingId = 0;
+    final shoppingListRepository = LocalShoppingListRepository(
+      applicationSupportDirectory: supportDirectory,
+      createId: () => 'shopping-${++nextShoppingId}',
+    );
     await tester.pumpWidget(
       CookbookApp(
         key: const ValueKey<String>('initial-app'),
         repository: repository,
         mealPlanRepository: mealPlanRepository,
+        shoppingListRepository: shoppingListRepository,
         imagePicker: _FakePicker(sourceImage.path),
         currentDateProvider: () => DateTime(2026, 9, 22),
       ),
@@ -210,8 +217,50 @@ void main() {
     expect(find.text('2'), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
 
+    await _tapKey(tester, 'add-to-shopping-list');
+    expect(find.text('Ingredients added to shopping list.'), findsOneWidget);
+    await _tapKey(tester, 'add-to-shopping-list');
     await tester.pageBack();
     await tester.pumpAndSettle();
+    await _tapKey(tester, 'shopping-list-destination');
+    expect(find.text('2 cup rainbow carrots (sliced)'), findsNWidgets(2));
+    expect(find.text('3 clove garlic'), findsNWidgets(2));
+    expect(
+      (await shoppingListRepository.load()).every((item) => !item.checked),
+      isTrue,
+    );
+    await _tapKey(tester, 'shopping-check-shopping-1');
+    expect(
+      tester
+          .widget<Checkbox>(
+            find.byKey(const ValueKey<String>('shopping-check-shopping-1')),
+          )
+          .value,
+      isTrue,
+    );
+    await _tapKey(tester, 'shopping-check-shopping-1');
+    expect(
+      tester
+          .widget<Checkbox>(
+            find.byKey(const ValueKey<String>('shopping-check-shopping-1')),
+          )
+          .value,
+      isFalse,
+    );
+    await _tapKey(tester, 'shopping-check-shopping-1');
+    await _tapKey(tester, 'shopping-remove-shopping-2');
+    expect(find.text('3 clove garlic'), findsOneWidget);
+    final savedShoppingItems = await shoppingListRepository.load();
+    expect(savedShoppingItems.map((item) => item.id), [
+      'shopping-1',
+      'shopping-3',
+      'shopping-4',
+    ]);
+    expect(savedShoppingItems.map((item) => item.checked), [
+      true,
+      false,
+      false,
+    ]);
 
     final reloadedRepository = LocalRecipeRepository(
       seedRepository: AssetRecipeRepository(assetBundle: rootBundle),
@@ -238,11 +287,22 @@ void main() {
     final reloadedMealPlanRepository = LocalMealPlanRepository(
       applicationSupportDirectory: supportDirectory,
     );
+    final reloadedShoppingListRepository = LocalShoppingListRepository(
+      applicationSupportDirectory: supportDirectory,
+      createId: () => 'reloaded-shopping-${++nextShoppingId}',
+    );
+    expect(
+      (await reloadedShoppingListRepository.load()).map(
+        (item) => item.toJson(),
+      ),
+      savedShoppingItems.map((item) => item.toJson()),
+    );
     await tester.pumpWidget(
       CookbookApp(
         key: const ValueKey<String>('restarted-app'),
         repository: reloadedRepository,
         mealPlanRepository: reloadedMealPlanRepository,
+        shoppingListRepository: reloadedShoppingListRepository,
         imagePicker: _FakePicker(sourceImage.path),
         currentDateProvider: () => DateTime(2026, 9, 22),
       ),
@@ -251,6 +311,30 @@ void main() {
 
     expect(_gridItemCount(tester), 9);
     expect(find.text('Family Vegetable Soup'), findsOneWidget);
+
+    await _tapKey(tester, 'shopping-list-destination');
+    expect(find.text('2 cup rainbow carrots (sliced)'), findsNWidgets(2));
+    expect(find.text('3 clove garlic'), findsOneWidget);
+    expect(
+      tester
+          .widget<Checkbox>(
+            find.byKey(const ValueKey<String>('shopping-check-shopping-1')),
+          )
+          .value,
+      isTrue,
+    );
+    expect(
+      tester
+          .widget<Checkbox>(
+            find.byKey(const ValueKey<String>('shopping-check-shopping-3')),
+          )
+          .value,
+      isFalse,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('shopping-item-shopping-2')),
+      findsNothing,
+    );
 
     await tester.tap(find.text('Meal plan'));
     await tester.pumpAndSettle();
@@ -271,6 +355,7 @@ void main() {
       tester,
       repository: reloadedRepository,
       mealPlanRepository: reloadedMealPlanRepository,
+      shoppingListRepository: shoppingListRepository,
       imagePath: sourceImage.path,
       currentDate: DateTime(2025, 12, 31, 23),
       expectedStart: 'Dec 29',
@@ -282,6 +367,7 @@ void main() {
       tester,
       repository: reloadedRepository,
       mealPlanRepository: reloadedMealPlanRepository,
+      shoppingListRepository: shoppingListRepository,
       imagePath: sourceImage.path,
       currentDate: DateTime(2024, 2, 29, 23),
       expectedStart: 'Feb 26',
@@ -293,6 +379,7 @@ void main() {
       tester,
       repository: reloadedRepository,
       mealPlanRepository: reloadedMealPlanRepository,
+      shoppingListRepository: shoppingListRepository,
       imagePath: sourceImage.path,
       currentDate: DateTime(2026, 3, 8, 23),
       expectedStart: 'Mar 2',
@@ -307,6 +394,7 @@ Future<void> _verifyWeekBoundary(
   WidgetTester tester, {
   required LocalRecipeRepository repository,
   required LocalMealPlanRepository mealPlanRepository,
+  required LocalShoppingListRepository shoppingListRepository,
   required String imagePath,
   required DateTime currentDate,
   required String expectedStart,
@@ -319,6 +407,7 @@ Future<void> _verifyWeekBoundary(
       key: ValueKey<String>(appKey),
       repository: repository,
       mealPlanRepository: mealPlanRepository,
+      shoppingListRepository: shoppingListRepository,
       imagePicker: _FakePicker(imagePath),
       currentDateProvider: () => currentDate,
     ),

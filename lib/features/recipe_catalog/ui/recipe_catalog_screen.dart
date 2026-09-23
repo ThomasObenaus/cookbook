@@ -12,11 +12,13 @@ class RecipeCatalogScreen extends StatefulWidget {
   const RecipeCatalogScreen({
     required this.repository,
     required this.imagePicker,
+    this.onAddIngredients,
     super.key,
   });
 
   final MutableRecipeRepository repository;
   final RecipeImagePicker imagePicker;
+  final AddIngredients? onAddIngredients;
 
   @override
   State<RecipeCatalogScreen> createState() => _RecipeCatalogScreenState();
@@ -96,7 +98,10 @@ class _RecipeCatalogScreenState extends State<RecipeCatalogScreen> {
   void _openRecipe(Recipe recipe) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => RecipeDetailScreen(recipe: recipe),
+        builder: (context) => RecipeDetailScreen(
+          recipe: recipe,
+          onAddIngredients: widget.onAddIngredients,
+        ),
       ),
     );
   }
