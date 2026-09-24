@@ -48,6 +48,7 @@ class _CookbookHomeScreenState extends State<CookbookHomeScreen> {
   }
 
   void _selectDestination(int index) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     setState(() {
       _selectedIndex = index;
     });

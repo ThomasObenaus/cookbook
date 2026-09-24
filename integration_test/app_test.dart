@@ -119,8 +119,6 @@ void main() {
         'olive oil',
       ],
     );
-    await tester.pump(const Duration(seconds: 5));
-    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Recipes'));
     await tester.pumpAndSettle();

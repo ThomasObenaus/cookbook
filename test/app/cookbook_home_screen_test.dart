@@ -101,7 +101,7 @@ void main() {
     expect(tester.widget<NavigationBar>(navigation).selectedIndex, 0);
   });
 
-  testWidgets('planner adds ingredients through the existing shopping state', (
+  testWidgets('planner addition dismisses feedback when changing tabs', (
     tester,
   ) async {
     final shopping = FakeShoppingListRepository();
@@ -123,11 +123,13 @@ void main() {
       find.byKey(const ValueKey<String>('add-week-to-shopping-list')),
     );
     await tester.pumpAndSettle();
+    expect(find.byType(SnackBar), findsOneWidget);
     await tester.tap(
       find.byKey(const ValueKey<String>('shopping-list-destination')),
     );
     await tester.pumpAndSettle();
 
+    expect(find.byType(SnackBar), findsNothing);
     expect(shopping.loadCount, 1);
     expect(shopping.items.single.ingredient.name, 'salt');
     expect(find.text('salt'), findsOneWidget);
