@@ -3,9 +3,9 @@
 Source: [description.md](description.md), Second Increment. Implementation:
 [steps2.md](steps2.md). Planning date: 2026-09-23.
 
-Status: planned, not implemented or verified by this planning task. This pair
-extends the implemented first increment in [plan1.md](plan1.md) and
-[steps1.md](steps1.md); earlier documents remain unchanged.
+Status: implemented and automatically verified on 2026-09-24. This document is
+retained as the design record for the second increment; observed results and
+remaining manual checks are recorded in [steps2.md](steps2.md).
 
 ## Goal And Scope
 
@@ -23,18 +23,18 @@ serving scaling, or undo/history is included.
 
 IDs are scoped to this increment; first-increment IDs remain unchanged.
 
-| ID | Requirement | Observable acceptance criterion | Steps |
-| --- | --- | --- | --- |
-| I2-R1 | Tap text to complete | Tapping an active entry's text or checkbox performs one persisted check operation; edit, remove, and drag controls do not also toggle it. | 1, 7 |
-| I2-R2 | Completed section | Checked entries leave the active group only after saving and appear in an expandable Completed section after all active entries. It starts collapsed; expanded entries can be unchecked back into the active group. | 1, 7 |
-| I2-R3 | Reorder entries | Users can move entries within either section, including identical-looking entries. The saved order survives reload; moving an entry preserves its values and checked flag. | 2, 7 |
-| I2-R4 | Edit entries | Users can change name, quantity, unit, and note for one active or completed entry. Save preserves its ID, order, and checked flag; cancel or failure leaves the saved item unchanged. | 3, 7 |
-| I2-R5 | Add planned week | A planner button appends every ingredient for every meal occurrence in the displayed week as one saved, unchecked batch, preserving existing shopping entries. No ingredient from another week is included. | 5, 6, 7 |
-| I2-R6 | Clear entire list | A confirmed clear removes all active and completed entries, including hidden completed entries. Cancel changes nothing; an empty list remains empty after restart. | 4, 7 |
-| I2-R7 | Durable, truthful operations | All new mutations work offline and publish success only after persistence. Failed writes retain the last saved state, corrupt data is not overwritten, and overlapping actions cannot lose updates. | 1-7 |
-| I2-R8 | Accessible, compatible UI | Touch, keyboard, and screen-reader actions are named and usable. Controls fit at 320-dp width and 200% text scale; existing recipe addition and tab/week state continue to work. | 1-7 |
+| ID    | Requirement                  | Observable acceptance criterion                                                                                                                                                                                     | Steps   |
+| ----- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| I2-R1 | Tap text to complete         | Tapping an active entry's text or checkbox performs one persisted check operation; edit, remove, and drag controls do not also toggle it.                                                                           | 1, 7    |
+| I2-R2 | Completed section            | Checked entries leave the active group only after saving and appear in an expandable Completed section after all active entries. It starts collapsed; expanded entries can be unchecked back into the active group. | 1, 7    |
+| I2-R3 | Reorder entries              | Users can move entries within either section, including identical-looking entries. The saved order survives reload; moving an entry preserves its values and checked flag.                                          | 2, 7    |
+| I2-R4 | Edit entries                 | Users can change name, quantity, unit, and note for one active or completed entry. Save preserves its ID, order, and checked flag; cancel or failure leaves the saved item unchanged.                               | 3, 7    |
+| I2-R5 | Add planned week             | A planner button appends every ingredient for every meal occurrence in the displayed week as one saved, unchecked batch, preserving existing shopping entries. No ingredient from another week is included.         | 5, 6, 7 |
+| I2-R6 | Clear entire list            | A confirmed clear removes all active and completed entries, including hidden completed entries. Cancel changes nothing; an empty list remains empty after restart.                                                  | 4, 7    |
+| I2-R7 | Durable, truthful operations | All new mutations work offline and publish success only after persistence. Failed writes retain the last saved state, corrupt data is not overwritten, and overlapping actions cannot lose updates.                 | 1-7     |
+| I2-R8 | Accessible, compatible UI    | Touch, keyboard, and screen-reader actions are named and usable. Controls fit at 320-dp width and 200% text scale; existing recipe addition and tab/week state continue to work.                                    | 1-7     |
 
-## Current Implementation
+## Planning Baseline
 
 - [Shopping list view](../../lib/features/shopping_list/ui/shopping_list_screen.dart)
   renders a flat list. Only the checkbox toggles completion; checked items stay
@@ -208,5 +208,5 @@ These are proposed defaults, not additional user-confirmed requirements:
 - Clearing requires confirmation and includes hidden completed entries; no undo
   or destructive recovery of corrupt storage is included.
 
-No external feasibility blocker remains. Confirm or revise these interaction
-defaults when implementation is authorized; this request authorizes planning only.
+No external feasibility blocker remained. The implementation follows these
+interaction defaults.

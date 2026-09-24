@@ -8,10 +8,15 @@ Display name: **Cookbook**. Android application ID: `com.thomaso.cookbook`.
 ## Shopping List
 
 Recipe details include **Add to shopping list**. The **Shopping list** tab keeps
-ingredient quantities, units, and notes, and supports checking and removing
-individual entries. Repeated additions create separate entries without merging
-quantities. The list is saved on the device and needs no account or network;
-it is not synchronized or backed up by this feature.
+ingredient quantities, units, and notes. Entries can be completed by tapping
+their checkbox or text, then reviewed in the collapsed **Completed** section.
+Both active and completed entries can be reordered, edited, and removed, while
+**Clear shopping list** removes all entries after confirmation.
+
+The meal planner can add every ingredient from the displayed week's planned
+meals in one operation. Repeated recipes and additions remain separate entries;
+quantities are not merged or scaled. The list is saved on the device and needs
+no account or network; it is not synchronized or backed up by this feature.
 
 ## Project Layout
 

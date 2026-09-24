@@ -3,13 +3,13 @@
 Source: [description.md](description.md), Second Increment. Design, defaults, and
 acceptance criteria: [plan2.md](plan2.md).
 
-Status: planned only. All checkboxes are intentionally unchecked. Implement one
-cohesive change at a time, adding focused tests and validating it before starting
-the next step. Earlier plans and implementation records remain unchanged.
+Status: implemented and automatically verified on 2026-09-24. Steps 1-6 are
+complete. Step 7 retains pending manual checks that cannot be inferred from
+automated tests. Earlier plans and implementation records remain unchanged.
 
 ## 1. Complete Entries By Text And Group Them
 
-- [ ] Add text toggling and the collapsed bottom Completed section.
+- [x] Add text toggling and the collapsed bottom Completed section.
 
 Requirements: I2-R1, I2-R2, I2-R7, I2-R8. Prerequisite: agree on plan2's section,
 restoration-order, and expansion defaults; first-increment code is present.
@@ -36,7 +36,7 @@ remains reachable without layout overflow or duplicate activation.
 
 ## 2. Persist And Expose Reordering
 
-- [ ] Allow entries to be reordered within their section.
+- [x] Allow entries to be reordered within their section.
 
 Requirements: I2-R3, I2-R7, I2-R8. Prerequisite: step 1 and agreed ordering defaults.
 
@@ -66,7 +66,7 @@ changing identities, values, or section membership.
 
 ## 3. Edit Individual Shopping Entries
 
-- [ ] Add a persisted ingredient editor for active and completed entries.
+- [x] Add a persisted ingredient editor for active and completed entries.
 
 Requirements: I2-R4, I2-R7, I2-R8. Prerequisites: steps 1-2; confirm editable fields.
 
@@ -93,7 +93,7 @@ cancel/failure never discards its prior values.
 
 ## 4. Clear The Entire List
 
-- [ ] Add confirmed clearing of active and completed entries.
+- [x] Add confirmed clearing of active and completed entries.
 
 Requirements: I2-R6, I2-R7, I2-R8. Prerequisites: steps 1-3.
 
@@ -116,7 +116,7 @@ durable operation and every nonconfirmed/failed action preserves saved data.
 
 ## 5. Resolve A Week Into One Ingredient Batch
 
-- [ ] Add pure, deterministic weekly ingredient collection.
+- [x] Add pure, deterministic weekly ingredient collection.
 
 Requirements: I2-R5, I2-R7. Prerequisite: confirm displayed-week, duplicate-meal,
 and unavailable-recipe defaults. This logic does not depend on steps 1-4.
@@ -141,7 +141,7 @@ non-success result, without storage or network dependencies.
 
 ## 6. Add The Planner Shopping Action
 
-- [ ] Append all meals in the displayed week through shared shopping state.
+- [x] Append all meals in the displayed week through shared shopping state.
 
 Requirements: I2-R5, I2-R7, I2-R8. Prerequisite: step 5; first-increment shared state.
 
@@ -172,7 +172,8 @@ added once per successful press and no failed/partial operation reports success.
 
 ## 7. Verify The Complete Second Increment
 
-- [ ] Add device workflow coverage and run acceptance/regression checks.
+- [ ] Add device workflow coverage and run acceptance/regression checks. Automated
+      coverage and checks are complete; manual checks listed below remain pending.
 
 Requirements: I2-R1 through I2-R8. Prerequisite: steps 1-6.
 
@@ -200,5 +201,16 @@ device/manual checks as pending. Update this checklist and feature documentation
 with actual outcomes, not assumed passes. Follow repository committed-diff review
 and PR procedures when applicable; do not commit merely to enable review.
 
-No implementation, application test run, commit, or PR operation is part of this
-planning request.
+Observed automated results on 2026-09-24:
+
+- Formatting check passed for `lib`, `test`, and `integration_test` (68 files).
+- `make analyze` passed with no issues.
+- `make test` passed 204 Flutter tests and 5 deployment-selector tests.
+- `make integration-test DEVICE=emulator-5554` passed the expanded Android flow.
+- A connected debug app hot-restarted successfully with no Flutter runtime errors.
+
+Pending manual observations: a true OS process restart, offline interaction,
+long-list drag scrolling, TalkBack and hardware-keyboard actions, and manual
+compact-width/large-text inspection. Automated tests cover app/repository
+recreation, keyboard-open editing, 320-dp width, and 200% text scaling, but those
+are not substitutes for the listed manual checks.

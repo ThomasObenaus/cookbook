@@ -35,11 +35,12 @@ class ShoppingListItem {
   final Ingredient ingredient;
   final bool checked;
 
-  ShoppingListItem copyWith({bool? checked}) => ShoppingListItem(
-    id: id,
-    ingredient: ingredient,
-    checked: checked ?? this.checked,
-  );
+  ShoppingListItem copyWith({Ingredient? ingredient, bool? checked}) =>
+      ShoppingListItem(
+        id: id,
+        ingredient: ingredient ?? this.ingredient,
+        checked: checked ?? this.checked,
+      );
 
   Map<String, Object?> toJson() => <String, Object?>{
     'id': id,

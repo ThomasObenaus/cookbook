@@ -37,6 +37,23 @@ void main() {
       expect(uncheckedItem.toJson(), item.toJson());
     });
 
+    test('replaces ingredient without changing identity or checked state', () {
+      const item = ShoppingListItem(
+        id: 'item-1',
+        ingredient: Ingredient(name: 'salt'),
+        checked: true,
+      );
+
+      final updated = item.copyWith(
+        ingredient: const Ingredient(name: 'pepper', quantity: 'to taste'),
+      );
+
+      expect(updated.id, item.id);
+      expect(updated.checked, isTrue);
+      expect(updated.ingredient.name, 'pepper');
+      expect(item.ingredient.name, 'salt');
+    });
+
     test('keeps duplicate ingredients independently identifiable', () {
       const ingredient = Ingredient(name: 'salt', quantity: 'to taste');
       const first = ShoppingListItem(id: 'item-1', ingredient: ingredient);

@@ -14,6 +14,18 @@ abstract interface class ShoppingListRepository {
   });
 
   Future<List<ShoppingListItem>> remove(String id);
+
+  Future<List<ShoppingListItem>> reorder({
+    required bool checked,
+    required List<String> ids,
+  });
+
+  Future<List<ShoppingListItem>> update({
+    required String id,
+    required Ingredient ingredient,
+  });
+
+  Future<List<ShoppingListItem>> clear();
 }
 
 class ShoppingListRepositoryException implements Exception {
