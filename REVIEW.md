@@ -6,7 +6,7 @@ None.
 
 ### MEDIUM
 
-- **Dismiss planner feedback when changing destinations**: [`_showShoppingMessage`](lib/features/meal_planner/ui/weekly_meal_planner_screen.dart#L398) posts through the shared ancestor `ScaffoldMessenger` while the planner remains mounted in the home [`IndexedStack`](lib/app/cookbook_home_screen.dart#L59). After adding a week, switching destinations leaves the four-second SnackBar over the new screen, where it can intercept lower-screen taps; the integration flow currently avoids this by [waiting five seconds](integration_test/app_test.dart#L122). Dismiss the message on destination changes or scope it to the planner.
+- **Suppress delayed planner feedback after a tab switch**: [`_selectDestination`](lib/app/cookbook_home_screen.dart#L50) hides only a SnackBar that already exists. If the user switches tabs while [`addIngredients` is still pending](lib/features/meal_planner/ui/weekly_meal_planner_screen.dart#L384), the retained planner posts its feedback after completion through the shared messenger, so it still appears over the new destination and can intercept taps. The regression test waits for completion before switching; cover the in-flight case and scope or suppress feedback when the planner is inactive.
 
 ### HIGH
 

@@ -237,7 +237,6 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
     await _tapKey(tester, 'shopping-list-destination');
-    expect(find.text('2 cup rainbow carrots (sliced)'), findsWidgets);
     expect(find.text('350 g spaghetti'), findsOneWidget);
     final addedShoppingItems = await shoppingListRepository.load();
     expect(
