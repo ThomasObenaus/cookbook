@@ -77,6 +77,51 @@ class LocalShoppingListRepository implements ShoppingListRepository {
   Future<List<ShoppingListItem>> remove(String id) =>
       _mutate((items) => items.where((item) => item.id != id).toList());
 
+  @override
+  Future<List<ShoppingListItem>> reorder({
+    required bool checked,
+    required List<String> ids,
+  }) {
+    final order = List<String>.of(ids);
+    return _mutate((items) {
+      final group = {
+        for (final item in items.where((item) => item.checked == checked))
+          item.id: item,
+      };
+      if (order.length != group.length ||
+          order.toSet().length != order.length ||
+          order.any((id) => !group.containsKey(id))) {
+        throw StateError('The shopping-list order is no longer current.');
+      }
+      var position = 0;
+      return <ShoppingListItem>[
+        for (final item in items)
+          if (item.checked == checked) group[order[position++]]! else item,
+      ];
+    });
+  }
+
+  @override
+  Future<List<ShoppingListItem>> update({
+    required String id,
+    required Ingredient ingredient,
+  }) async {
+    final replacement = Ingredient.fromJson(ingredient.toJson());
+    return _mutate((items) {
+      if (!items.any((item) => item.id == id)) {
+        throw StateError('The shopping-list item no longer exists.');
+      }
+      return <ShoppingListItem>[
+        for (final item in items)
+          item.id == id ? item.copyWith(ingredient: replacement) : item,
+      ];
+    });
+  }
+
+  @override
+  Future<List<ShoppingListItem>> clear() =>
+      _mutate((items) => <ShoppingListItem>[]);
+
   Future<List<ShoppingListItem>> _mutate(
     List<ShoppingListItem> Function(List<ShoppingListItem>) update,
   ) {

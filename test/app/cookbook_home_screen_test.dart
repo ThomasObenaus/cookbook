@@ -30,6 +30,11 @@ void main() {
       );
       await tester.tap(destination);
       await tester.pumpAndSettle();
+      expect(find.text('pepper'), findsNothing);
+      await tester.tap(
+        find.byKey(const ValueKey<String>('shopping-completed-header')),
+      );
+      await tester.pumpAndSettle();
       expect(find.text('pepper'), findsOneWidget);
       for (var batch = 0; batch < 2; batch++) {
         await tester.tap(find.text('Recipes'));
@@ -94,6 +99,40 @@ void main() {
     await tester.tap(find.text('Recipes'));
     await tester.pumpAndSettle();
     expect(tester.widget<NavigationBar>(navigation).selectedIndex, 0);
+  });
+
+  testWidgets('planner addition dismisses feedback when changing tabs', (
+    tester,
+  ) async {
+    final shopping = FakeShoppingListRepository();
+    final mealPlan = _TestMealPlanRepository();
+    mealPlan.assignments.add(
+      MealAssignment(
+        date: DateTime(2026, 9, 21),
+        mealType: MealType.dinner,
+        recipeId: 'family-soup',
+      ),
+    );
+    await tester.pumpWidget(
+      _testApp(mealPlanRepository: mealPlan, shoppingListRepository: shopping),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Meal plan'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('add-week-to-shopping-list')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(SnackBar), findsOneWidget);
+    await tester.tap(
+      find.byKey(const ValueKey<String>('shopping-list-destination')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SnackBar), findsNothing);
+    expect(shopping.loadCount, 1);
+    expect(shopping.items.single.ingredient.name, 'salt');
+    expect(find.text('salt'), findsOneWidget);
   });
 
   testWidgets('preserves catalogue and planner state between destinations', (
@@ -229,15 +268,13 @@ void main() {
       final sundayDinner = find.byKey(
         const ValueKey<String>('meal-slot-2026-09-27-dinner'),
       );
-      await tester.scrollUntilVisible(
-        sundayDinner,
-        400,
-        scrollable: find.descendant(
-          of: planner,
-          matching: find.byType(Scrollable),
-        ),
+      final scrollable = find.descendant(
+        of: planner,
+        matching: find.byType(Scrollable),
       );
-      await tester.pumpAndSettle();
+      final position = tester.state<ScrollableState>(scrollable).position;
+      position.jumpTo(position.maxScrollExtent);
+      await tester.pump();
 
       final navigation = find.byKey(
         const ValueKey<String>('cookbook-primary-navigation'),

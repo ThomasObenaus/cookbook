@@ -48,6 +48,7 @@ class _CookbookHomeScreenState extends State<CookbookHomeScreen> {
   }
 
   void _selectDestination(int index) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     setState(() {
       _selectedIndex = index;
     });
@@ -68,6 +69,10 @@ class _CookbookHomeScreenState extends State<CookbookHomeScreen> {
             recipeRepository: widget.recipeRepository,
             mealPlanRepository: widget.mealPlanRepository,
             currentDateProvider: widget.currentDateProvider,
+            shoppingListListenable: _shoppingList,
+            isShoppingListAvailable: () =>
+                _shoppingList.loaded && !_shoppingList.busy,
+            onAddIngredients: _shoppingList.appendIngredients,
           ),
           ShoppingListScreen(controller: _shoppingList),
         ],

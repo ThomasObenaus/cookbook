@@ -10,14 +10,13 @@ inside the app.
 - A dedicated Shopping list view is accessible from the app's main navigation.
 - No Google Keep integration, account login, list selection, or integration settings screen is required. The feature works offline.
 
-## Proposed Defaults
+## Second Increment
 
-- Use one shopping list, stored locally and retained after restarting the app.
-- Users can check/uncheck purchased items and remove individual items.
-- Preserve ingredient order and optional notes. Existing entries remain intact; adding another recipe appends its ingredients as unchecked entries.
-- Do not merge duplicate ingredients or convert units. Adding the same recipe again intentionally appends another set of entries.
-- Show loading, empty, and recoverable error states. Report a successful addition only after it has been saved, and prevent repeated presses while saving.
-- Manual item creation/editing, multiple lists, sharing, synchronization, and bulk clearing are outside this increment.
-
-Current planning documents: [plan1.md](plan1.md) and [steps1.md](steps1.md).
-The earlier plan and steps describe the superseded Google Keep approach.
+- clicking on a shoppinglist entry text marks it as done (checked) not only when clicking the checkbox
+- when an entry is checked then it vanishes from the shopping list into a separate "Completed" section.
+- that completed section is collapsed so that all entries are hidden, it can be expended
+- that completed section is at the bottom of the shopping list.
+- entries can be moved in order
+- entries can be edited
+- the weekly meal planner view also has a add to shopping list button that adds the ingredients for all the meals that are currently planned in the week
+- the shopping list can be cleared entirely, removing all entries including completed ones

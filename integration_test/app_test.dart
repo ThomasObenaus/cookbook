@@ -108,6 +108,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Creamy Mushroom Pasta'), findsNothing);
 
+    await _tapKey(tester, 'add-week-to-shopping-list');
+    expect(
+      (await shoppingListRepository.load()).map((item) => item.ingredient.name),
+      <String>[
+        'spaghetti',
+        'crushed tomatoes',
+        'garlic',
+        'fresh basil',
+        'olive oil',
+      ],
+    );
+
     await tester.tap(find.text('Recipes'));
     await tester.pumpAndSettle();
     expect(find.widgetWithText(AppBar, 'Recipes'), findsOneWidget);
@@ -220,47 +232,75 @@ void main() {
     await _tapKey(tester, 'add-to-shopping-list');
     expect(find.text('Ingredients added to shopping list.'), findsOneWidget);
     await _tapKey(tester, 'add-to-shopping-list');
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
     await tester.pageBack();
     await tester.pumpAndSettle();
     await _tapKey(tester, 'shopping-list-destination');
-    expect(find.text('2 cup rainbow carrots (sliced)'), findsNWidgets(2));
-    expect(find.text('3 clove garlic'), findsNWidgets(2));
+    expect(find.text('350 g spaghetti'), findsOneWidget);
+    final addedShoppingItems = await shoppingListRepository.load();
     expect(
-      (await shoppingListRepository.load()).every((item) => !item.checked),
-      isTrue,
+      addedShoppingItems.where(
+        (item) => item.ingredient.name == 'rainbow carrots',
+      ),
+      hasLength(2),
     );
-    await _tapKey(tester, 'shopping-check-shopping-1');
     expect(
-      tester
-          .widget<Checkbox>(
-            find.byKey(const ValueKey<String>('shopping-check-shopping-1')),
-          )
-          .value,
-      isTrue,
+      addedShoppingItems.where(
+        (item) =>
+            item.ingredient.name == 'garlic' && item.ingredient.quantity == '3',
+      ),
+      hasLength(2),
     );
-    await _tapKey(tester, 'shopping-check-shopping-1');
+    expect(addedShoppingItems.every((item) => !item.checked), isTrue);
+    await _tapKey(tester, 'shopping-text-shopping-1');
+    expect(find.text('350 g spaghetti'), findsNothing);
+    await _tapShoppingKey(tester, 'shopping-completed-header');
+    expect(find.text('Completed (1)'), findsOneWidget);
+
+    await _tapShoppingKey(tester, 'shopping-move-shopping-8');
+    await tester.tap(find.text('Move up'));
+    await tester.pumpAndSettle();
     expect(
-      tester
-          .widget<Checkbox>(
-            find.byKey(const ValueKey<String>('shopping-check-shopping-1')),
-          )
-          .value,
-      isFalse,
+      (await shoppingListRepository.load()).map((item) => item.id),
+      <String>[
+        'shopping-1',
+        'shopping-2',
+        'shopping-3',
+        'shopping-4',
+        'shopping-5',
+        'shopping-6',
+        'shopping-8',
+        'shopping-7',
+        'shopping-9',
+      ],
     );
-    await _tapKey(tester, 'shopping-check-shopping-1');
-    await _tapKey(tester, 'shopping-remove-shopping-2');
+
+    await _tapShoppingKey(tester, 'shopping-edit-shopping-1');
+    await tester.enterText(
+      find.byKey(const ValueKey<String>('shopping-edit-name')),
+      'whole-wheat spaghetti',
+    );
+    await _tapKey(tester, 'shopping-edit-save');
+    await _scrollToShoppingKey(tester, 'shopping-text-shopping-1');
+    expect(find.text('350 g whole-wheat spaghetti'), findsOneWidget);
+
+    await _tapShoppingKey(tester, 'shopping-remove-shopping-7');
     expect(find.text('3 clove garlic'), findsOneWidget);
     final savedShoppingItems = await shoppingListRepository.load();
     expect(savedShoppingItems.map((item) => item.id), [
       'shopping-1',
+      'shopping-2',
       'shopping-3',
       'shopping-4',
+      'shopping-5',
+      'shopping-6',
+      'shopping-8',
+      'shopping-9',
     ]);
-    expect(savedShoppingItems.map((item) => item.checked), [
-      true,
-      false,
-      false,
-    ]);
+    expect(savedShoppingItems.first.ingredient.name, 'whole-wheat spaghetti');
+    expect(savedShoppingItems.first.checked, isTrue);
+    expect(savedShoppingItems.skip(1).every((item) => !item.checked), isTrue);
 
     final reloadedRepository = LocalRecipeRepository(
       seedRepository: AssetRecipeRepository(assetBundle: rootBundle),
@@ -313,8 +353,11 @@ void main() {
     expect(find.text('Family Vegetable Soup'), findsOneWidget);
 
     await _tapKey(tester, 'shopping-list-destination');
-    expect(find.text('2 cup rainbow carrots (sliced)'), findsNWidgets(2));
-    expect(find.text('3 clove garlic'), findsOneWidget);
+    expect(find.text('350 g whole-wheat spaghetti'), findsNothing);
+    await _tapShoppingKey(tester, 'shopping-completed-header');
+    expect(find.text('Completed (1)'), findsOneWidget);
+    await _scrollToShoppingKey(tester, 'shopping-check-shopping-1');
+    expect(find.text('350 g whole-wheat spaghetti'), findsOneWidget);
     expect(
       tester
           .widget<Checkbox>(
@@ -324,17 +367,24 @@ void main() {
       isTrue,
     );
     expect(
-      tester
-          .widget<Checkbox>(
-            find.byKey(const ValueKey<String>('shopping-check-shopping-3')),
-          )
-          .value,
-      isFalse,
-    );
-    expect(
-      find.byKey(const ValueKey<String>('shopping-item-shopping-2')),
+      find.byKey(const ValueKey<String>('shopping-item-shopping-7')),
       findsNothing,
     );
+
+    await _tapShoppingKey(tester, 'shopping-completed-header');
+    expect(find.text('350 g whole-wheat spaghetti'), findsNothing);
+    await _tapKey(tester, 'shopping-clear');
+    expect(
+      find.text('Remove all 8 entries, including active and completed items?'),
+      findsOneWidget,
+    );
+    await _tapKey(tester, 'shopping-clear-confirm');
+    expect(find.text('Your shopping list is empty.'), findsOneWidget);
+    final clearedShoppingListRepository = LocalShoppingListRepository(
+      applicationSupportDirectory: supportDirectory,
+      createId: () => 'cleared-shopping-${++nextShoppingId}',
+    );
+    expect(await clearedShoppingListRepository.load(), isEmpty);
 
     await tester.tap(find.text('Meal plan'));
     await tester.pumpAndSettle();
@@ -355,7 +405,7 @@ void main() {
       tester,
       repository: reloadedRepository,
       mealPlanRepository: reloadedMealPlanRepository,
-      shoppingListRepository: shoppingListRepository,
+      shoppingListRepository: clearedShoppingListRepository,
       imagePath: sourceImage.path,
       currentDate: DateTime(2025, 12, 31, 23),
       expectedStart: 'Dec 29',
@@ -367,7 +417,7 @@ void main() {
       tester,
       repository: reloadedRepository,
       mealPlanRepository: reloadedMealPlanRepository,
-      shoppingListRepository: shoppingListRepository,
+      shoppingListRepository: clearedShoppingListRepository,
       imagePath: sourceImage.path,
       currentDate: DateTime(2024, 2, 29, 23),
       expectedStart: 'Feb 26',
@@ -379,7 +429,7 @@ void main() {
       tester,
       repository: reloadedRepository,
       mealPlanRepository: reloadedMealPlanRepository,
-      shoppingListRepository: shoppingListRepository,
+      shoppingListRepository: clearedShoppingListRepository,
       imagePath: sourceImage.path,
       currentDate: DateTime(2026, 3, 8, 23),
       expectedStart: 'Mar 2',
@@ -446,9 +496,31 @@ Future<void> _changeRecipe(
 
 Future<void> _tapKey(WidgetTester tester, String key) async {
   final finder = find.byKey(ValueKey<String>(key));
+  FocusManager.instance.primaryFocus?.unfocus();
+  await tester.pumpAndSettle();
   await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  expect(finder.hitTestable(), findsOneWidget);
   await tester.tap(finder);
   await tester.pumpAndSettle();
+}
+
+Future<void> _tapShoppingKey(WidgetTester tester, String key) async {
+  await _scrollToShoppingKey(tester, key);
+  await _tapKey(tester, key);
+}
+
+Future<void> _scrollToShoppingKey(WidgetTester tester, String key) async {
+  final list = find.byKey(const PageStorageKey<String>('shopping-list-items'));
+  final scrollable = find.descendant(
+    of: list,
+    matching: find.byType(Scrollable),
+  );
+  await tester.scrollUntilVisible(
+    find.byKey(ValueKey<String>(key)),
+    300,
+    scrollable: scrollable,
+  );
 }
 
 Future<void> _fillIngredient(

@@ -1,4 +1,5 @@
 import 'package:cookbook/features/meal_planner/data/meal_plan_repository.dart';
+import 'package:cookbook/features/meal_planner/logic/collect_week_ingredients.dart';
 import 'package:cookbook/features/meal_planner/logic/week_dates.dart';
 import 'package:cookbook/features/meal_planner/models/meal_assignment.dart';
 import 'package:cookbook/features/meal_planner/models/meal_type.dart';
@@ -9,18 +10,27 @@ import 'package:cookbook/features/recipe_catalog/models/recipe.dart';
 import 'package:flutter/material.dart';
 
 typedef CurrentDateProvider = DateTime Function();
+typedef AddWeekIngredients = Future<bool> Function(
+  List<Ingredient> ingredients,
+);
 
 class WeeklyMealPlannerScreen extends StatefulWidget {
   const WeeklyMealPlannerScreen({
     required this.recipeRepository,
     required this.mealPlanRepository,
     required this.currentDateProvider,
+    this.shoppingListListenable,
+    this.isShoppingListAvailable,
+    this.onAddIngredients,
     super.key,
   });
 
   final RecipeRepository recipeRepository;
   final MealPlanRepository mealPlanRepository;
   final CurrentDateProvider currentDateProvider;
+  final Listenable? shoppingListListenable;
+  final bool Function()? isShoppingListAvailable;
+  final AddWeekIngredients? onAddIngredients;
 
   @override
   State<WeeklyMealPlannerScreen> createState() =>
@@ -42,6 +52,7 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
   String _errorMessage = '';
   int _loadGeneration = 0;
   bool _recipesLoaded = false;
+  bool _addingWeek = false;
   final Set<MealAssignmentIdentity> _mutatingSlots = <MealAssignmentIdentity>{};
 
   @override
@@ -51,11 +62,26 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
     _currentWeekStart = mondayOfWeek(_today);
     _visibleWeekStart = _currentWeekStart;
     _scrollController = ScrollController();
+    widget.shoppingListListenable?.addListener(_shoppingListChanged);
     _loadVisibleWeek();
   }
 
   @override
+  void didUpdateWidget(WeeklyMealPlannerScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.shoppingListListenable != widget.shoppingListListenable) {
+      oldWidget.shoppingListListenable?.removeListener(_shoppingListChanged);
+      widget.shoppingListListenable?.addListener(_shoppingListChanged);
+    }
+  }
+
+  void _shoppingListChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   void dispose() {
+    widget.shoppingListListenable?.removeListener(_shoppingListChanged);
     _scrollController.dispose();
     super.dispose();
   }
@@ -321,6 +347,60 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
         date.isBefore(nextWeek(_visibleWeekStart));
   }
 
+  bool get _canAddWeek {
+    return !_addingWeek &&
+        _status == _PlannerStatus.success &&
+        _assignments.any(
+          (assignment) => _dateIsInVisibleWeek(assignment.date),
+        ) &&
+        _mutatingSlots.isEmpty &&
+        widget.onAddIngredients != null &&
+        (widget.isShoppingListAvailable?.call() ?? true);
+  }
+
+  Future<void> _addWeekToShoppingList() async {
+    if (!_canAddWeek) return;
+    final weekStart = _visibleWeekStart;
+    final collection = collectWeekIngredients(
+      weekStart: weekStart,
+      assignments: _assignments,
+      recipesById: _recipesById,
+    );
+    final localizations = MaterialLocalizations.of(context);
+    final weekEnd = datesInWeek(weekStart).last;
+    final weekLabel = _formatWeekLabel(localizations, weekStart, weekEnd);
+    if (collection case MissingWeekRecipe(:final date, :final mealType)) {
+      _showShoppingMessage(
+        '$weekLabel cannot be added: ${mealType.label.toLowerCase()} on '
+        '${localizations.formatMediumDate(date)} has an unavailable recipe.',
+      );
+      return;
+    }
+    final ingredients = (collection as WeekIngredientBatch).ingredients;
+    if (ingredients.isEmpty) return;
+    final addIngredients = widget.onAddIngredients!;
+    setState(() => _addingWeek = true);
+    var saved = false;
+    try {
+      saved = await addIngredients(List<Ingredient>.unmodifiable(ingredients));
+    } catch (_) {
+      saved = false;
+    }
+    if (!mounted) return;
+    setState(() => _addingWeek = false);
+    _showShoppingMessage(
+      saved
+          ? '${ingredients.length} ingredients from $weekLabel added to the shopping list.'
+          : 'Ingredients from $weekLabel could not be added. Please try again.',
+    );
+  }
+
+  void _showShoppingMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -333,6 +413,8 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
             _WeekHeader(
               weekStart: _visibleWeekStart,
               isCurrentWeek: _visibleWeekStart == _currentWeekStart,
+              addingWeek: _addingWeek,
+              onAddWeek: _canAddWeek ? _addWeekToShoppingList : null,
               onPrevious: _showPreviousWeek,
               onToday: _showCurrentWeek,
               onNext: _showNextWeek,
@@ -386,10 +468,25 @@ class _WeeklyMealPlannerScreenState extends State<WeeklyMealPlannerScreen> {
   }
 }
 
+String _formatWeekLabel(
+  MaterialLocalizations localizations,
+  DateTime weekStart,
+  DateTime weekEnd,
+) {
+  final start = localizations.formatShortMonthDay(weekStart);
+  final end = localizations.formatShortMonthDay(weekEnd);
+  if (weekStart.year == weekEnd.year) {
+    return '$start - $end, ${weekEnd.year}';
+  }
+  return '$start, ${weekStart.year} - $end, ${weekEnd.year}';
+}
+
 class _WeekHeader extends StatelessWidget {
   const _WeekHeader({
     required this.weekStart,
     required this.isCurrentWeek,
+    required this.addingWeek,
+    required this.onAddWeek,
     required this.onPrevious,
     required this.onToday,
     required this.onNext,
@@ -397,6 +494,8 @@ class _WeekHeader extends StatelessWidget {
 
   final DateTime weekStart;
   final bool isCurrentWeek;
+  final bool addingWeek;
+  final VoidCallback? onAddWeek;
   final VoidCallback onPrevious;
   final VoidCallback onToday;
   final VoidCallback onNext;
@@ -450,6 +549,24 @@ class _WeekHeader extends StatelessWidget {
                 icon: const Icon(Icons.chevron_right),
               ),
             ],
+          ),
+          const SizedBox(height: 4),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              key: const ValueKey<String>('add-week-to-shopping-list'),
+              onPressed: onAddWeek,
+              icon: addingWeek
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.add_shopping_cart),
+              label: const Text(
+                "Add week's ingredients",
+                textAlign: TextAlign.center,
+              ),
+            ),
           ),
         ],
       ),

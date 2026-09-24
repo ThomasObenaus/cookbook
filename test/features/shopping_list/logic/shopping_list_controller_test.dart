@@ -41,6 +41,15 @@ void main() {
     expect(() => controller.items.clear(), throwsUnsupportedError);
     expect(await controller.setChecked('item-1', true), isTrue);
     expect(controller.items.single.checked, isTrue);
+    expect(
+      await controller.update(
+        'item-1',
+        const Ingredient(name: 'sea salt', quantity: 'to taste'),
+      ),
+      isTrue,
+    );
+    expect(controller.items.single.ingredient.name, 'sea salt');
+    expect(controller.items.single.checked, isTrue);
     expect(await controller.remove('item-1'), isTrue);
     expect(controller.items, isEmpty);
   });
@@ -86,6 +95,28 @@ void main() {
     expect(repository.loadCount, 1);
     expect(controller.items, hasLength(1));
   });
+
+  test(
+    'clear publishes empty only after a confirmed repository write',
+    () async {
+      await controller.appendIngredients([
+        const Ingredient(name: 'salt'),
+        const Ingredient(name: 'pepper'),
+      ]);
+      repository.writeGate = Completer<void>();
+      final clear = controller.clear();
+      expect(controller.busy, isTrue);
+      expect(controller.items, hasLength(2));
+      repository.writeGate!.complete();
+      expect(await clear, isTrue);
+      expect(controller.items, isEmpty);
+
+      await controller.appendIngredients([const Ingredient(name: 'milk')]);
+      repository.writeError = StateError('disk');
+      expect(await controller.clear(), isFalse);
+      expect(controller.items.single.ingredient.name, 'milk');
+    },
+  );
 
   test('initial load cannot overwrite a later mutation', () async {
     repository.loadGate = Completer<void>();

@@ -52,6 +52,42 @@ class FakeShoppingListRepository implements ShoppingListRepository {
   Future<List<ShoppingListItem>> remove(String id) =>
       _write(() => items.where((item) => item.id != id).toList());
 
+  @override
+  Future<List<ShoppingListItem>> reorder({
+    required bool checked,
+    required List<String> ids,
+  }) {
+    final order = List<String>.of(ids);
+    return _write(() {
+      final group = {
+        for (final item in items.where((item) => item.checked == checked))
+          item.id: item,
+      };
+      var position = 0;
+      return [
+        for (final item in items)
+          item.checked == checked ? group[order[position++]]! : item,
+      ];
+    });
+  }
+
+  @override
+  Future<List<ShoppingListItem>> update({
+    required String id,
+    required Ingredient ingredient,
+  }) => _write(() {
+    if (!items.any((item) => item.id == id)) {
+      throw StateError('The shopping-list item no longer exists.');
+    }
+    return <ShoppingListItem>[
+      for (final item in items)
+        item.id == id ? item.copyWith(ingredient: ingredient) : item,
+    ];
+  });
+
+  @override
+  Future<List<ShoppingListItem>> clear() => _write(() => <ShoppingListItem>[]);
+
   Future<List<ShoppingListItem>> _write(
     List<ShoppingListItem> Function() update,
   ) async {

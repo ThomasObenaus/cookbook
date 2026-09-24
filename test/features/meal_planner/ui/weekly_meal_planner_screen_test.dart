@@ -318,6 +318,178 @@ void main() {
     expect(find.text('Recipe unavailable'), findsOneWidget);
   });
 
+  testWidgets('adds the displayed week once in deterministic order', (
+    tester,
+  ) async {
+    final porridge = _recipe(
+      'porridge',
+      'Morning Porridge',
+      ingredients: const <Ingredient>[
+        Ingredient(name: 'oats'),
+        Ingredient(name: 'milk'),
+      ],
+    );
+    final soup = _recipe('soup', 'Soup');
+    final additions = <List<Ingredient>>[];
+    await tester.pumpWidget(
+      _testApp(
+        recipeRepository: _StaticRecipeRepository(<Recipe>[porridge, soup]),
+        mealPlanRepository: _StaticMealPlanRepository(
+          assignments: <MealAssignment>[
+            MealAssignment(
+              date: DateTime(2026, 9, 22),
+              mealType: MealType.dinner,
+              recipeId: soup.id,
+            ),
+            MealAssignment(
+              date: DateTime(2026, 9, 21),
+              mealType: MealType.breakfast,
+              recipeId: porridge.id,
+            ),
+          ],
+        ),
+        onAddIngredients: (ingredients) async {
+          additions.add(ingredients);
+          return true;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('add-week-to-shopping-list')),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(additions, hasLength(1));
+    expect(additions.single.map((ingredient) => ingredient.name), [
+      'oats',
+      'milk',
+      'salt',
+    ]);
+    expect(find.textContaining('Sep 21 - Sep 27, 2026 added'), findsOneWidget);
+  });
+
+  testWidgets('blocks empty and unavailable weeks without a partial add', (
+    tester,
+  ) async {
+    var calls = 0;
+    await tester.pumpWidget(
+      _testApp(
+        recipeRepository: _StaticRecipeRepository(const <Recipe>[]),
+        mealPlanRepository: _StaticMealPlanRepository(
+          assignments: <MealAssignment>[
+            MealAssignment(
+              date: DateTime(2026, 9, 21),
+              mealType: MealType.lunch,
+              recipeId: 'missing',
+            ),
+          ],
+        ),
+        onAddIngredients: (_) async {
+          calls++;
+          return true;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+    final action = find.byKey(
+      const ValueKey<String>('add-week-to-shopping-list'),
+    );
+    await tester.tap(action);
+    await tester.pumpAndSettle();
+    expect(calls, 0);
+    expect(find.textContaining('has an unavailable recipe'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      _testApp(
+        recipeRepository: _StaticRecipeRepository(const <Recipe>[]),
+        mealPlanRepository: _StaticMealPlanRepository(),
+        onAddIngredients: (_) async {
+          calls++;
+          return true;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.widget<FilledButton>(action).onPressed, isNull);
+  });
+
+  testWidgets('captures the week, suppresses overlap, and reports failures', (
+    tester,
+  ) async {
+    final recipe = _recipe('porridge', 'Morning Porridge');
+    final saveGate = Completer<bool>();
+    var calls = 0;
+    await tester.pumpWidget(
+      _testApp(
+        recipeRepository: _StaticRecipeRepository(<Recipe>[recipe]),
+        mealPlanRepository: _StaticMealPlanRepository(
+          assignments: <MealAssignment>[
+            MealAssignment(
+              date: DateTime(2026, 9, 21),
+              mealType: MealType.breakfast,
+              recipeId: recipe.id,
+            ),
+          ],
+        ),
+        onAddIngredients: (_) {
+          calls++;
+          return saveGate.future;
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+    final action = find.byKey(
+      const ValueKey<String>('add-week-to-shopping-list'),
+    );
+    await tester.tap(action);
+    await tester.pump();
+    expect(tester.widget<FilledButton>(action).onPressed, isNull);
+    await tester.tap(find.byTooltip('Next week'));
+    await tester.pump();
+    await tester.pump();
+    expect(calls, 1);
+    saveGate.complete(false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.textContaining('Sep 21 - Sep 27, 2026'), findsOneWidget);
+    expect(find.textContaining('could not be added'), findsOneWidget);
+  });
+
+  testWidgets('reacts to shared shopping availability', (tester) async {
+    final recipe = _recipe('porridge', 'Morning Porridge');
+    final availability = _ShoppingAvailability(false);
+    await tester.pumpWidget(
+      _testApp(
+        recipeRepository: _StaticRecipeRepository(<Recipe>[recipe]),
+        mealPlanRepository: _StaticMealPlanRepository(
+          assignments: <MealAssignment>[
+            MealAssignment(
+              date: DateTime(2026, 9, 21),
+              mealType: MealType.breakfast,
+              recipeId: recipe.id,
+            ),
+          ],
+        ),
+        shoppingListListenable: availability,
+        isShoppingListAvailable: () => availability.available,
+        onAddIngredients: (_) async => true,
+      ),
+    );
+    await tester.pumpAndSettle();
+    final action = find.byKey(
+      const ValueKey<String>('add-week-to-shopping-list'),
+    );
+    expect(tester.widget<FilledButton>(action).onPressed, isNull);
+    availability.setAvailable(true);
+    await tester.pump();
+    expect(tester.widget<FilledButton>(action).onPressed, isNotNull);
+  });
+
   testWidgets(
     'cancels selection and waits for persistence before assigning a slot',
     (tester) async {
@@ -667,6 +839,9 @@ Widget _testApp({
   required RecipeRepository recipeRepository,
   required MealPlanRepository mealPlanRepository,
   DateTime? currentDate,
+  Listenable? shoppingListListenable,
+  bool Function()? isShoppingListAvailable,
+  AddWeekIngredients? onAddIngredients,
 }) {
   return MaterialApp(
     theme: ThemeData(
@@ -676,11 +851,18 @@ Widget _testApp({
       recipeRepository: recipeRepository,
       mealPlanRepository: mealPlanRepository,
       currentDateProvider: () => currentDate ?? DateTime(2026, 9, 22, 18),
+      shoppingListListenable: shoppingListListenable,
+      isShoppingListAvailable: isShoppingListAvailable,
+      onAddIngredients: onAddIngredients,
     ),
   );
 }
 
-Recipe _recipe(String id, String name) {
+Recipe _recipe(
+  String id,
+  String name, {
+  List<Ingredient> ingredients = const <Ingredient>[Ingredient(name: 'salt')],
+}) {
   return Recipe(
     id: id,
     name: name,
@@ -688,9 +870,20 @@ Recipe _recipe(String id, String name) {
     prepMinutes: 10,
     cookMinutes: 20,
     image: RecipeImage.asset('assets/images/recipe_placeholder.png'),
-    ingredients: const <Ingredient>[Ingredient(name: 'salt')],
+    ingredients: ingredients,
     steps: const <String>['Cook.'],
   );
+}
+
+class _ShoppingAvailability extends ChangeNotifier {
+  _ShoppingAvailability(this.available);
+
+  bool available;
+
+  void setAvailable(bool value) {
+    available = value;
+    notifyListeners();
+  }
 }
 
 Finder _slot(String date, MealType mealType) {

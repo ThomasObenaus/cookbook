@@ -28,6 +28,14 @@ class ShoppingListController extends ChangeNotifier {
 
   Future<bool> remove(String id) => _run(() => _repository.remove(id));
 
+  Future<bool> reorder({required bool checked, required List<String> ids}) =>
+      _run(() => _repository.reorder(checked: checked, ids: ids));
+
+  Future<bool> update(String id, Ingredient ingredient) =>
+      _run(() => _repository.update(id: id, ingredient: ingredient));
+
+  Future<bool> clear() => _run(_repository.clear);
+
   Future<bool> _run(Future<List<ShoppingListItem>> Function() operation) async {
     if (_disposed || _busy) {
       return false;
