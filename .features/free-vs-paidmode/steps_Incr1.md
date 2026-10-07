@@ -55,19 +55,19 @@ flutter test test/features/sharing/data/app_preferences_store_test.dart
 
 ## 3. Add the Entitlement Source Boundary
 
-- [ ] Define `EntitlementSource` with only the fetch operation needed by this
+- [x] Define `EntitlementSource` with only the fetch operation needed by this
   increment.
-- [ ] Do not add purchase, restore, acknowledge, Google Play, or Supabase
+- [x] Do not add purchase, restore, acknowledge, Google Play, or Supabase
   methods to the interface.
-- [ ] Implement the production source to report `sharingUnavailable`, because
+- [x] Implement the production source to report `sharingUnavailable`, because
   no paid feature exists yet.
-- [ ] Implement a configurable fake source with success and failure results.
-- [ ] Implement a debug-only mutable source for exercising all entitlement
+- [x] Implement a configurable fake source with success and failure results.
+- [x] Implement a debug-only mutable source for exercising all entitlement
   states on a device.
-- [ ] Ensure the debug source cannot be selected in release builds.
-- [ ] Add tests that verify production loading performs no network operation.
-- [ ] Add tests covering fake success and failure injection.
-- [ ] Run the focused source tests:
+- [x] Ensure the debug source cannot be selected in release builds.
+- [x] Add tests that verify production loading performs no network operation.
+- [x] Add tests covering fake success and failure injection.
+- [x] Run the focused source tests:
 
 ```bash
 flutter test test/features/sharing/data
@@ -75,22 +75,22 @@ flutter test test/features/sharing/data
 
 ## 4. Implement the Entitlement Controller
 
-- [ ] Create an entitlement controller using `ChangeNotifier`, following the
+- [x] Create an entitlement controller using `ChangeNotifier`, following the
   existing `ShoppingListController` lifecycle pattern.
-- [ ] Expose the current entitlement, loading state, and user-facing error
+- [x] Expose the current entitlement, loading state, and user-facing error
   state.
-- [ ] Load the initial entitlement through the injected source.
-- [ ] Allow only one refresh request at a time.
-- [ ] Add a generation or request identity to discard stale asynchronous
+- [x] Load the initial entitlement through the injected source.
+- [x] Allow only one refresh request at a time.
+- [x] Add a generation or request identity to discard stale asynchronous
   results.
-- [ ] Preserve the previous known entitlement when a refresh fails.
-- [ ] Represent a failed refresh as `verificationUnavailable` rather than
+- [x] Preserve the previous known entitlement when a refresh fails.
+- [x] Represent a failed refresh as `verificationUnavailable` rather than
   silently reporting `expired` or `active`.
-- [ ] Suppress notifications after disposal.
-- [ ] Clear transient errors before a retry.
-- [ ] Test initial success, initial failure, retry, overlapping refreshes, stale
+- [x] Suppress notifications after disposal.
+- [x] Clear transient errors before a retry.
+- [x] Test initial success, initial failure, retry, overlapping refreshes, stale
   results, previous-state fallback, and post-dispose completion.
-- [ ] Run the focused controller tests:
+- [x] Run the focused controller tests:
 
 ```bash
 flutter test test/features/sharing/logic
@@ -98,23 +98,23 @@ flutter test test/features/sharing/logic
 
 ## 5. Add First-Launch Onboarding
 
-- [ ] Create an onboarding screen titled `Welcome to Cookbook`.
-- [ ] Explain that local use needs no account, payment, or network.
-- [ ] Explain that future sharing will require a subscription for the cookbook
+- [x] Create an onboarding screen titled `Welcome to Cookbook`.
+- [x] Explain that local use needs no account, payment, or network.
+- [x] Explain that future sharing will require a subscription for the cookbook
   owner.
-- [ ] Add `Use locally for free`.
-- [ ] Add `Learn about sharing`.
-- [ ] Make local use the clear default path into the existing cookbook.
-- [ ] Make the sharing explanation explicit that sharing is not available in
+- [x] Add `Use locally for free`.
+- [x] Add `Learn about sharing`.
+- [x] Make local use the clear default path into the existing cookbook.
+- [x] Make the sharing explanation explicit that sharing is not available in
   this increment.
-- [ ] Persist onboarding completion before leaving the screen.
-- [ ] Keep the existing local repositories and data untouched.
-- [ ] Show a retryable error if preference persistence fails.
-- [ ] Ensure this screen cannot start billing, authentication, Supabase, or
+- [x] Persist onboarding completion before leaving the screen.
+- [x] Keep the existing local repositories and data untouched.
+- [x] Show a retryable error if preference persistence fails.
+- [x] Ensure this screen cannot start billing, authentication, Supabase, or
   network work.
-- [ ] Test first-launch rendering, local-use completion, sharing explanation,
+- [x] Test first-launch rendering, local-use completion, sharing explanation,
   persistence failure, and retry.
-- [ ] Run the focused onboarding tests:
+- [x] Run the focused onboarding tests:
 
 ```bash
 flutter test test/features/sharing/ui/onboarding_screen_test.dart
