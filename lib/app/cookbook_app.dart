@@ -38,15 +38,24 @@ class CookbookApp extends StatefulWidget {
   State<CookbookApp> createState() => _CookbookAppState();
 }
 
-class _CookbookAppState extends State<CookbookApp> {
+class _CookbookAppState extends State<CookbookApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     widget.entitlementController.load();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      widget.entitlementController.refresh();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.entitlementController.dispose();
     super.dispose();
   }

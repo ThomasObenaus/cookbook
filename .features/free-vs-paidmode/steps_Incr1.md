@@ -191,29 +191,29 @@ flutter test test/features/sharing/ui test/app/cookbook_home_screen_test.dart
 
 ## 10. Refresh Entitlement State on Resume
 
-- [ ] Observe app lifecycle changes from the existing app shell.
-- [ ] Refresh the entitlement controller when the app resumes.
-- [ ] Avoid refreshing on every widget rebuild or navigation change.
-- [ ] Remove the lifecycle observer during disposal.
-- [ ] Ignore completion after disposal.
-- [ ] Test resume-triggered refresh, duplicate resume protection, and disposal.
+- [x] Observe app lifecycle changes from the existing app shell.
+- [x] Refresh the entitlement controller when the app resumes.
+- [x] Avoid refreshing on every widget rebuild or navigation change.
+- [x] Remove the lifecycle observer during disposal.
+- [x] Ignore completion after disposal.
+- [x] Test resume-triggered refresh, duplicate resume protection, and disposal.
 
 ## 11. Update Existing App Tests and Integration Coverage
 
-- [ ] Update `test/widget_test.dart` to complete or bypass onboarding through
+- [x] Update `test/widget_test.dart` to complete or bypass onboarding through
   injected preferences.
-- [ ] Update `test/app/cookbook_home_screen_test.dart` helpers with the new
+- [x] Update `test/app/cookbook_home_screen_test.dart` helpers with the new
   preferences and entitlement dependencies.
-- [ ] Update `integration_test/app_test.dart` so the existing persistence
+- [x] Update `integration_test/app_test.dart` so the existing persistence
   journey starts after onboarding.
-- [ ] Add an integration journey for first launch and `Use locally for free`.
-- [ ] Verify app recreation opens directly on Recipes after onboarding.
-- [ ] Verify local recipes, meal plans, shopping-list items, and images remain
+- [x] Add an integration journey for first launch and `Use locally for free`.
+- [x] Verify app recreation opens directly on Recipes after onboarding.
+- [x] Verify local recipes, meal plans, shopping-list items, and images remain
   available after recreation.
-- [ ] Verify Settings can be opened and closed without losing catalogue,
+- [x] Verify Settings can be opened and closed without losing catalogue,
   planner, or shopping-list state.
-- [ ] Verify no test contacts Google Play, Supabase, or a network service.
-- [ ] Run the focused app and integration tests:
+- [x] Verify no test contacts Google Play, Supabase, or a network service.
+- [x] Run the focused app and integration tests:
 
 ```bash
 flutter test test/widget_test.dart test/app/cookbook_home_screen_test.dart

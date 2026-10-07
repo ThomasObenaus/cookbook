@@ -13,6 +13,7 @@ import 'package:cookbook/features/sharing/data/app_preferences_store.dart';
 import 'package:cookbook/features/sharing/data/entitlement_source.dart';
 import 'package:cookbook/features/sharing/logic/entitlement_controller.dart';
 import 'package:cookbook/features/shopping_list/data/local_shopping_list_repository.dart';
+import 'package:cookbook/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,6 +21,74 @@ import 'package:integration_test/integration_test.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets(
+    'local onboarding survives recreation and settings preserve app state',
+    (tester) async {
+      final supportDirectory = await Directory.systemTemp.createTemp(
+        'cookbook-onboarding-integration-',
+      );
+      addTearDown(() async {
+        if (await supportDirectory.exists()) {
+          await supportDirectory.delete(recursive: true);
+        }
+      });
+
+      await tester.pumpWidget(
+        await createCookbookApp(
+          supportDirectoryProvider: () async => supportDirectory,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Welcome to Cookbook'), findsOneWidget);
+      await tester.tap(find.text('Use locally for free'));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(AppBar, 'Recipes'), findsOneWidget);
+      expect(_gridItemCount(tester), 8);
+
+      final search = find.byKey(const ValueKey<String>('recipe-search-field'));
+      await tester.enterText(search, 'Pasta');
+      await tester.pump();
+      await _tapKey(tester, 'settings-destination');
+      expect(find.text('Local cookbook'), findsOneWidget);
+      await tester.tap(find.text('Recipes'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextField>(search).controller?.text, 'Pasta');
+
+      await tester.tap(find.text('Meal plan'));
+      await tester.pumpAndSettle();
+      final range = find.byKey(const ValueKey<String>('meal-plan-week-range'));
+      final initialRange = tester.widget<Text>(range).data;
+      await tester.tap(find.byTooltip('Next week'));
+      await tester.pumpAndSettle();
+      final nextRange = tester.widget<Text>(range).data;
+      expect(nextRange, isNot(initialRange));
+      await _tapKey(tester, 'settings-destination');
+      await tester.tap(find.text('Meal plan'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<Text>(range).data, nextRange);
+
+      await _tapKey(tester, 'shopping-list-destination');
+      expect(find.text('Your shopping list is empty.'), findsOneWidget);
+      await _tapKey(tester, 'settings-destination');
+      await _tapKey(tester, 'shopping-list-destination');
+      expect(find.text('Your shopping list is empty.'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+      await tester.pumpWidget(
+        await createCookbookApp(
+          supportDirectoryProvider: () async => supportDirectory,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Welcome to Cookbook'), findsNothing);
+      expect(find.widgetWithText(AppBar, 'Recipes'), findsOneWidget);
+      expect(_gridItemCount(tester), 8);
+    },
+  );
 
   testWidgets('recipes, meal plans and shopping items survive app recreation', (
     tester,

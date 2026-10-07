@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cookbook/app/cookbook_app.dart';
 import 'package:cookbook/features/meal_planner/data/meal_plan_repository.dart';
 import 'package:cookbook/features/meal_planner/models/meal_assignment.dart';
@@ -10,12 +12,14 @@ import 'package:cookbook/features/recipe_creator/models/new_recipe.dart';
 import 'package:cookbook/features/sharing/data/app_preferences_store.dart';
 import 'package:cookbook/features/sharing/data/entitlement_source.dart';
 import 'package:cookbook/features/sharing/logic/entitlement_controller.dart';
+import 'package:cookbook/features/sharing/models/sharing_entitlement.dart';
 import 'package:cookbook/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'features/shopping_list/fake_shopping_list_repository.dart';
 import 'features/sharing/fake_app_preferences_store.dart';
+import 'features/sharing/fake_entitlement_source.dart';
 
 void main() {
   testWidgets('app launches into the recipe catalogue', (tester) async {
@@ -84,6 +88,89 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('refreshes entitlement on resume without overlapping requests', (
+    tester,
+  ) async {
+    final resumedResult = Completer<SharingEntitlement>();
+    var request = 0;
+    final source = FakeEntitlementSource(() {
+      request++;
+      if (request == 1) {
+        return Future<SharingEntitlement>.value(
+          SharingEntitlement.sharingUnavailable(),
+        );
+      }
+      return resumedResult.future;
+    });
+    final controller = EntitlementController(source: source);
+    await tester.pumpWidget(_testCookbookApp(controller));
+    await tester.pumpAndSettle();
+    expect(source.fetchCount, 1);
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('settings-destination')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Recipes'));
+    await tester.pumpAndSettle();
+    expect(source.fetchCount, 1);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+    expect(source.fetchCount, 1);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(source.fetchCount, 2);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(source.fetchCount, 2);
+
+    await tester.pumpWidget(const SizedBox());
+    resumedResult.complete(SharingEntitlement.active());
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+  });
+}
+
+Widget _testCookbookApp(EntitlementController controller) {
+  final preferences = AppPreferences.onboardingCompleted(
+    DateTime.utc(2026, 9, 22),
+  );
+  return CookbookApp(
+    repository: _StaticRepository(<Recipe>[
+      Recipe(
+        id: 'tomato-basil-pasta',
+        name: 'Tomato Basil Pasta',
+        servings: 4,
+        prepMinutes: 10,
+        cookMinutes: 20,
+        image: RecipeImage.asset('assets/images/recipe_placeholder.png'),
+        ingredients: const <Ingredient>[Ingredient(name: 'spaghetti')],
+        steps: const <String>['Cook the pasta.'],
+      ),
+    ]),
+    mealPlanRepository: const _EmptyMealPlanRepository(),
+    shoppingListRepository: FakeShoppingListRepository(),
+    imagePicker: const _FakePicker(),
+    currentDateProvider: () => DateTime(2026, 9, 22),
+    initialPreferences: preferences,
+    preferencesStore: FakeAppPreferencesStore(preferences),
+    entitlementController: controller,
+  );
 }
 
 class _StaticRepository implements MutableRecipeRepository {
