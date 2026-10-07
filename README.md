@@ -5,6 +5,24 @@ in a separate repository.
 
 Display name: **Cookbook**. Android application ID: `com.thomaso.cookbook`.
 
+## Local Use and Future Sharing
+
+Cookbook currently runs in a free local mode. On first launch, choose **Use
+locally for free** to keep recipes, meal plans, shopping-list items, and images
+on the device. Local use requires no account, payment, Supabase connection, or
+network access. The choice is remembered on later launches.
+
+The **Settings** tab identifies the cookbook as local and previews future
+sharing. **Invite members** remains disabled because shared cookbooks are not
+implemented yet. Debug builds include an in-memory entitlement-state simulator
+for development; simulated states are not persisted and are absent from release
+builds.
+
+Paid sharing is deferred to a later increment. It will require Google Play
+Billing, Supabase Auth, server-side purchase verification, shared cookbook
+persistence, and invitation handling. None of those services or purchase flows
+exist in this increment, so the app cannot charge a user.
+
 ## Shopping List
 
 Recipe details include **Add to shopping list**. The **Shopping list** tab keeps

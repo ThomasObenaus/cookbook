@@ -222,47 +222,47 @@ flutter test integration_test/app_test.dart
 
 ## 12. Update Documentation and Complete Validation
 
-- [ ] Update `README.md` with the free local mode and the deferred paid sharing
+- [x] Update `README.md` with the free local mode and the deferred paid sharing
   model.
-- [ ] Document that real Google Play Billing, Supabase Auth, and server-side
+- [x] Document that real Google Play Billing, Supabase Auth, and server-side
   purchase verification belong to a later increment.
-- [ ] Document that no user can be charged in this increment.
-- [ ] Confirm the feature description and this steps file agree on scope.
-- [ ] Run Dart formatting:
+- [x] Document that no user can be charged in this increment.
+- [x] Confirm the feature description and this steps file agree on scope.
+- [x] Run Dart formatting:
 
 ```bash
 dart format lib test integration_test
 ```
 
-- [ ] Run strict static analysis:
+- [x] Run strict static analysis:
 
 ```bash
 make analyze
 ```
 
-- [ ] Run the complete unit and widget test suite:
+- [x] Run the complete unit and widget test suite:
 
 ```bash
 make test
 ```
 
-- [ ] Run the Android integration journey:
+- [x] Run the Android integration journey:
 
 ```bash
 make integration-test DEVICE=emulator-5554
 ```
 
-- [ ] Build the debug APK:
+- [x] Build the debug APK:
 
 ```bash
 flutter build apk --debug
 ```
 
-- [ ] Manually verify first launch, local onboarding, app restart, Settings,
+- [x] Manually verify first launch, local onboarding, app restart, Settings,
   disabled invitations, and the debug simulator on the configured emulator.
-- [ ] Confirm no Google Play, Supabase, billing, or network dependency was
+- [x] Confirm no Google Play, Supabase, billing, or network dependency was
   introduced accidentally.
-- [ ] Confirm every acceptance criterion in
+- [x] Confirm every acceptance criterion in
   [plan_Incr1.md](plan_Incr1.md#acceptance-criteria).
-- [ ] If the implementation is committed in `main...HEAD`, complete the
+- [x] If the implementation is committed in `main...HEAD`, complete the
   repository review workflow.
