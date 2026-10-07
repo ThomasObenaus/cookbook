@@ -1,11 +1,25 @@
+import 'package:cookbook/features/sharing/data/entitlement_source.dart';
 import 'package:cookbook/features/sharing/logic/entitlement_controller.dart';
 import 'package:cookbook/features/sharing/models/entitlement_status.dart';
+import 'package:cookbook/features/sharing/ui/debug_entitlement_simulator.dart';
+import 'package:cookbook/features/sharing/ui/invite_preview_tile.dart';
+import 'package:cookbook/features/sharing/ui/onboarding_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({required this.entitlementController, super.key});
+  const SettingsScreen({
+    required this.entitlementController,
+    required this.currentTimeProvider,
+    this.debugEntitlementSource,
+    this.debugToolsEnabled = kDebugMode,
+    super.key,
+  });
 
   final EntitlementController entitlementController;
+  final CurrentTimeProvider currentTimeProvider;
+  final DebugEntitlementSource? debugEntitlementSource;
+  final bool debugToolsEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +81,23 @@ class SettingsScreen extends StatelessWidget {
                       : null,
                 ),
               ),
+              const SizedBox(height: 8),
+              InvitePreviewTile(entitlement: entitlement),
+              if (kDebugMode &&
+                  debugToolsEnabled &&
+                  debugEntitlementSource != null) ...<Widget>[
+                const SizedBox(height: 24),
+                Text(
+                  'Developer tools',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                DebugEntitlementSimulator(
+                  source: debugEntitlementSource!,
+                  controller: entitlementController,
+                  currentTimeProvider: currentTimeProvider,
+                ),
+              ],
             ],
           );
         },

@@ -5,6 +5,7 @@ import 'package:cookbook/features/meal_planner/ui/weekly_meal_planner_screen.dar
 import 'package:cookbook/features/recipe_creator/data/mutable_recipe_repository.dart';
 import 'package:cookbook/features/recipe_creator/data/recipe_image_picker.dart';
 import 'package:cookbook/features/sharing/data/app_preferences_store.dart';
+import 'package:cookbook/features/sharing/data/entitlement_source.dart';
 import 'package:cookbook/features/sharing/logic/entitlement_controller.dart';
 import 'package:cookbook/features/shopping_list/data/shopping_list_repository.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,7 @@ class CookbookApp extends StatefulWidget {
     required this.initialPreferences,
     required this.preferencesStore,
     required this.entitlementController,
+    this.debugEntitlementSource,
     super.key,
   });
 
@@ -30,6 +32,7 @@ class CookbookApp extends StatefulWidget {
   final AppPreferences initialPreferences;
   final AppPreferencesStore preferencesStore;
   final EntitlementController entitlementController;
+  final DebugEntitlementSource? debugEntitlementSource;
 
   @override
   State<CookbookApp> createState() => _CookbookAppState();
@@ -65,6 +68,7 @@ class _CookbookAppState extends State<CookbookApp> {
           imagePicker: widget.imagePicker,
           currentDateProvider: widget.currentDateProvider,
           entitlementController: widget.entitlementController,
+          debugEntitlementSource: widget.debugEntitlementSource,
         ),
       ),
     );

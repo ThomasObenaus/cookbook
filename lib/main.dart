@@ -9,6 +9,7 @@ import 'package:cookbook/features/sharing/data/app_preferences_store.dart';
 import 'package:cookbook/features/sharing/data/entitlement_source.dart';
 import 'package:cookbook/features/sharing/logic/entitlement_controller.dart';
 import 'package:cookbook/features/shopping_list/data/local_shopping_list_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -37,8 +38,11 @@ Future<Widget> createCookbookApp({
       applicationSupportDirectory: supportDirectory,
     );
     final initialPreferences = await preferencesStore.load();
+    final debugEntitlementSource = kDebugMode ? DebugEntitlementSource() : null;
+    final EntitlementSource entitlementSource =
+        debugEntitlementSource ?? const SharingUnavailableEntitlementSource();
     final entitlementController = EntitlementController(
-      source: const SharingUnavailableEntitlementSource(),
+      source: entitlementSource,
     );
     return CookbookApp(
       repository: repository,
@@ -52,6 +56,7 @@ Future<Widget> createCookbookApp({
       initialPreferences: initialPreferences,
       preferencesStore: preferencesStore,
       entitlementController: entitlementController,
+      debugEntitlementSource: debugEntitlementSource,
     );
   } catch (_) {
     return const CookbookStartupFailureApp();

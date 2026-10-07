@@ -166,27 +166,27 @@ flutter test test/features/sharing/ui test/app/cookbook_home_screen_test.dart
 
 ## 8. Add the Disabled Invitation Preview
 
-- [ ] Add an `Invite members` control to Settings.
-- [ ] Keep it visibly disabled in every entitlement state.
-- [ ] Explain that invitations are unavailable in this increment.
-- [ ] Use distinct explanatory text for unavailable, expired, and active
+- [x] Add an `Invite members` control to Settings.
+- [x] Keep it visibly disabled in every entitlement state.
+- [x] Explain that invitations are unavailable in this increment.
+- [x] Use distinct explanatory text for unavailable, expired, and active
   simulated states where that improves clarity.
-- [ ] Ensure tapping or activating the disabled control cannot mutate state,
+- [x] Ensure tapping or activating the disabled control cannot mutate state,
   navigate, or start network work.
-- [ ] Add a stable key and semantic label.
-- [ ] Test disabled behavior and explanatory text for every state.
+- [x] Add a stable key and semantic label.
+- [x] Test disabled behavior and explanatory text for every state.
 
 ## 9. Add the Debug Entitlement Simulator
 
-- [ ] Expose `Simulate sharing state` only when `kDebugMode` is true.
-- [ ] List every entitlement state in a testable control.
-- [ ] Apply the selected state through the debug source and refresh the
+- [x] Expose `Simulate sharing state` only when `kDebugMode` is true.
+- [x] List every entitlement state in a testable control.
+- [x] Apply the selected state through the debug source and refresh the
   controller.
-- [ ] Allow expiration timestamps to be deterministic in tests through the
+- [x] Allow expiration timestamps to be deterministic in tests through the
   injected clock.
-- [ ] Do not persist simulated state across launches.
-- [ ] Confirm no simulator control is present in a release configuration.
-- [ ] Test state selection, controller refresh, expiration rendering, and
+- [x] Do not persist simulated state across launches.
+- [x] Confirm no simulator control is present in a release configuration.
+- [x] Test state selection, controller refresh, expiration rendering, and
   release exclusion.
 
 ## 10. Refresh Entitlement State on Resume

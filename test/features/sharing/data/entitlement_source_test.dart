@@ -23,6 +23,18 @@ void main() {
     expect((await source.fetch()).status, EntitlementStatus.active);
   });
 
+  test('a new debug source does not retain simulated state', () async {
+    final firstSource = DebugEntitlementSource();
+    firstSource.setEntitlement(SharingEntitlement.active());
+
+    final restartedSource = DebugEntitlementSource();
+
+    expect(
+      (await restartedSource.fetch()).status,
+      EntitlementStatus.sharingUnavailable,
+    );
+  });
+
   test('fake source supports success and failure injection', () async {
     final source = FakeEntitlementSource(
       () async => SharingEntitlement.notEntitled(),

@@ -3,6 +3,7 @@ import 'package:cookbook/features/meal_planner/ui/weekly_meal_planner_screen.dar
 import 'package:cookbook/features/recipe_catalog/ui/recipe_catalog_screen.dart';
 import 'package:cookbook/features/recipe_creator/data/mutable_recipe_repository.dart';
 import 'package:cookbook/features/recipe_creator/data/recipe_image_picker.dart';
+import 'package:cookbook/features/sharing/data/entitlement_source.dart';
 import 'package:cookbook/features/sharing/logic/entitlement_controller.dart';
 import 'package:cookbook/features/sharing/ui/settings_screen.dart';
 import 'package:cookbook/features/shopping_list/data/shopping_list_repository.dart';
@@ -18,6 +19,7 @@ class CookbookHomeScreen extends StatefulWidget {
     required this.imagePicker,
     required this.currentDateProvider,
     required this.entitlementController,
+    this.debugEntitlementSource,
     super.key,
   });
 
@@ -27,6 +29,7 @@ class CookbookHomeScreen extends StatefulWidget {
   final RecipeImagePicker imagePicker;
   final CurrentDateProvider currentDateProvider;
   final EntitlementController entitlementController;
+  final DebugEntitlementSource? debugEntitlementSource;
 
   @override
   State<CookbookHomeScreen> createState() => _CookbookHomeScreenState();
@@ -79,7 +82,11 @@ class _CookbookHomeScreenState extends State<CookbookHomeScreen> {
             onAddIngredients: _shoppingList.appendIngredients,
           ),
           ShoppingListScreen(controller: _shoppingList),
-          SettingsScreen(entitlementController: widget.entitlementController),
+          SettingsScreen(
+            entitlementController: widget.entitlementController,
+            currentTimeProvider: widget.currentDateProvider,
+            debugEntitlementSource: widget.debugEntitlementSource,
+          ),
         ],
       ),
       bottomNavigationBar: NavigationBar(
