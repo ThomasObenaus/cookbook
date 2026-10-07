@@ -11,6 +11,8 @@ import 'package:cookbook/features/recipe_creator/data/mutable_recipe_repository.
 import 'package:cookbook/features/recipe_creator/data/recipe_image_picker.dart';
 import 'package:cookbook/features/recipe_creator/models/new_recipe.dart';
 import 'package:cookbook/features/recipe_creator/ui/recipe_creator_screen.dart';
+import 'package:cookbook/features/sharing/data/entitlement_source.dart';
+import 'package:cookbook/features/sharing/logic/entitlement_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -99,6 +101,19 @@ void main() {
     await tester.tap(find.text('Recipes'));
     await tester.pumpAndSettle();
     expect(tester.widget<NavigationBar>(navigation).selectedIndex, 0);
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('settings-destination')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<NavigationBar>(navigation).selectedIndex, 3);
+    expect(find.widgetWithText(AppBar, 'Settings'), findsOneWidget);
+    expect(find.text('Local cookbook'), findsOneWidget);
+
+    await tester.tap(find.text('Recipes'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<NavigationBar>(navigation).selectedIndex, 0);
   });
 
   testWidgets('planner addition dismisses feedback when changing tabs', (
@@ -176,6 +191,12 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Your shopping list is empty.'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('settings-destination')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Local cookbook'), findsOneWidget);
 
     await tester.tap(find.text('Recipes'));
     await tester.pumpAndSettle();
@@ -308,6 +329,9 @@ Widget _testApp({
           shoppingListRepository ?? FakeShoppingListRepository(),
       imagePicker: const _FakePicker(),
       currentDateProvider: () => DateTime(2026, 9, 22),
+      entitlementController: EntitlementController(
+        source: const SharingUnavailableEntitlementSource(),
+      ),
     ),
   );
 }

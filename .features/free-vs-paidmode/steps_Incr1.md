@@ -122,23 +122,23 @@ flutter test test/features/sharing/ui/onboarding_screen_test.dart
 
 ## 6. Add the Startup Gate
 
-- [ ] Extract the existing app composition into a testable app-shell location
+- [x] Extract the existing app composition into a testable app-shell location
   only as far as startup gating requires.
-- [ ] Keep `main.dart` responsible for initialization and dependency
+- [x] Keep `main.dart` responsible for initialization and dependency
   composition, not feature behavior.
-- [ ] Resolve the application support directory once and inject the preferences
+- [x] Resolve the application support directory once and inject the preferences
   store.
-- [ ] Load preferences before selecting the initial screen.
-- [ ] Render onboarding when completion is absent.
-- [ ] Render the existing cookbook shell after onboarding is complete.
-- [ ] Treat malformed preferences as first launch.
-- [ ] Preserve `CookbookStartupFailureApp` when support-directory initialization
+- [x] Load preferences before selecting the initial screen.
+- [x] Render onboarding when completion is absent.
+- [x] Render the existing cookbook shell after onboarding is complete.
+- [x] Treat malformed preferences as first launch.
+- [x] Preserve `CookbookStartupFailureApp` when support-directory initialization
   fails.
-- [ ] Keep startup errors controlled and user-visible.
-- [ ] Update every `CookbookApp` construction site with the new dependencies.
-- [ ] Test first launch, completed onboarding, malformed preferences, and
+- [x] Keep startup errors controlled and user-visible.
+- [x] Update every `CookbookApp` construction site with the new dependencies.
+- [x] Test first launch, completed onboarding, malformed preferences, and
   support-directory failure.
-- [ ] Run the focused startup tests:
+- [x] Run the focused startup tests:
 
 ```bash
 flutter test test/app/startup_gate_test.dart
@@ -146,19 +146,19 @@ flutter test test/app/startup_gate_test.dart
 
 ## 7. Add the Settings Destination
 
-- [ ] Add a fourth `Settings` destination to the existing `NavigationBar`.
-- [ ] Keep Recipes, Meal plan, and Shopping list at indices 0, 1, and 2.
-- [ ] Add a stable key for the Settings destination and screen.
-- [ ] Show a `Local cookbook` section with an offline-storage explanation.
-- [ ] Show a Sharing section driven by the entitlement controller.
-- [ ] Display the documented text for every entitlement state.
-- [ ] Display the expiration date for `cancelledUntilExpiration`.
-- [ ] Offer `Retry` only when verification is unavailable.
-- [ ] Make retry use the controller rather than directly invoking the source.
-- [ ] Preserve existing destination state when switching to and from Settings.
-- [ ] Test navigation, local status, all entitlement states, expiration display,
+- [x] Add a fourth `Settings` destination to the existing `NavigationBar`.
+- [x] Keep Recipes, Meal plan, and Shopping list at indices 0, 1, and 2.
+- [x] Add a stable key for the Settings destination and screen.
+- [x] Show a `Local cookbook` section with an offline-storage explanation.
+- [x] Show a Sharing section driven by the entitlement controller.
+- [x] Display the documented text for every entitlement state.
+- [x] Display the expiration date for `cancelledUntilExpiration`.
+- [x] Offer `Retry` only when verification is unavailable.
+- [x] Make retry use the controller rather than directly invoking the source.
+- [x] Preserve existing destination state when switching to and from Settings.
+- [x] Test navigation, local status, all entitlement states, expiration display,
   retry behavior, and existing destination indices.
-- [ ] Run the focused Settings and app-shell tests:
+- [x] Run the focused Settings and app-shell tests:
 
 ```bash
 flutter test test/features/sharing/ui test/app/cookbook_home_screen_test.dart

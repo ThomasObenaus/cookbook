@@ -1,3 +1,4 @@
+import 'package:cookbook/app/cookbook_app.dart';
 import 'package:cookbook/features/meal_planner/data/meal_plan_repository.dart';
 import 'package:cookbook/features/meal_planner/models/meal_assignment.dart';
 import 'package:cookbook/features/meal_planner/models/meal_type.dart';
@@ -6,14 +7,21 @@ import 'package:cookbook/features/recipe_catalog/models/recipe_image.dart';
 import 'package:cookbook/features/recipe_creator/data/mutable_recipe_repository.dart';
 import 'package:cookbook/features/recipe_creator/data/recipe_image_picker.dart';
 import 'package:cookbook/features/recipe_creator/models/new_recipe.dart';
+import 'package:cookbook/features/sharing/data/app_preferences_store.dart';
+import 'package:cookbook/features/sharing/data/entitlement_source.dart';
+import 'package:cookbook/features/sharing/logic/entitlement_controller.dart';
 import 'package:cookbook/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'features/shopping_list/fake_shopping_list_repository.dart';
+import 'features/sharing/fake_app_preferences_store.dart';
 
 void main() {
   testWidgets('app launches into the recipe catalogue', (tester) async {
+    final preferences = AppPreferences.onboardingCompleted(
+      DateTime.utc(2026, 9, 22),
+    );
     await tester.pumpWidget(
       CookbookApp(
         repository: _StaticRepository(<Recipe>[
@@ -35,6 +43,11 @@ void main() {
           ..loadError = StateError('storage'),
         imagePicker: const _FakePicker(),
         currentDateProvider: () => DateTime(2026, 9, 22),
+        initialPreferences: preferences,
+        preferencesStore: FakeAppPreferencesStore(preferences),
+        entitlementController: EntitlementController(
+          source: const SharingUnavailableEntitlementSource(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
