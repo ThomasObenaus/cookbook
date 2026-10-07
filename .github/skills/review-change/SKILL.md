@@ -1,8 +1,8 @@
 ---
-description: "Review committed branch changes against main using the branch-diff skill and write a concise, PR-ready report to REVIEW.md."
-agent: "agent"
+name: review-change
+description: Review committed branch changes against main using the branch-diff skill and write a concise, PR-ready report to REVIEW.md.
+disable-model-invocation: true
 ---
-
 # Review Current Change
 
 Review the current branch's committed changes against main and write the report to `REVIEW.md` at the repository root. Do not fix the code.

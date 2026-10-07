@@ -1,10 +1,9 @@
 ---
 name: plan-feature
-description: "Create a feature plan and ordered implementation steps from a feature folder's description.md without overwriting earlier plans."
+description: Create a feature plan and ordered implementation steps from a feature folder's description.md without overwriting earlier plans.
+disable-model-invocation: true
 argument-hint: "<feature-folder> (for example: .features/add_to_shopping_list)"
-agent: agent
 ---
-
 Create planning documents for the feature folder provided by the user. This is a
 planning-only task: do not implement the feature, modify application code, install
 dependencies, commit changes, or create a pull request.

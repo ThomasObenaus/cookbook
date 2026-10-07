@@ -3,6 +3,9 @@ import 'package:cookbook/features/meal_planner/ui/weekly_meal_planner_screen.dar
 import 'package:cookbook/features/recipe_catalog/ui/recipe_catalog_screen.dart';
 import 'package:cookbook/features/recipe_creator/data/mutable_recipe_repository.dart';
 import 'package:cookbook/features/recipe_creator/data/recipe_image_picker.dart';
+import 'package:cookbook/features/sharing/data/entitlement_source.dart';
+import 'package:cookbook/features/sharing/logic/entitlement_controller.dart';
+import 'package:cookbook/features/sharing/ui/settings_screen.dart';
 import 'package:cookbook/features/shopping_list/data/shopping_list_repository.dart';
 import 'package:cookbook/features/shopping_list/logic/shopping_list_controller.dart';
 import 'package:cookbook/features/shopping_list/ui/shopping_list_screen.dart';
@@ -15,6 +18,8 @@ class CookbookHomeScreen extends StatefulWidget {
     required this.shoppingListRepository,
     required this.imagePicker,
     required this.currentDateProvider,
+    required this.entitlementController,
+    this.debugEntitlementSource,
     super.key,
   });
 
@@ -23,6 +28,8 @@ class CookbookHomeScreen extends StatefulWidget {
   final ShoppingListRepository shoppingListRepository;
   final RecipeImagePicker imagePicker;
   final CurrentDateProvider currentDateProvider;
+  final EntitlementController entitlementController;
+  final DebugEntitlementSource? debugEntitlementSource;
 
   @override
   State<CookbookHomeScreen> createState() => _CookbookHomeScreenState();
@@ -75,6 +82,11 @@ class _CookbookHomeScreenState extends State<CookbookHomeScreen> {
             onAddIngredients: _shoppingList.appendIngredients,
           ),
           ShoppingListScreen(controller: _shoppingList),
+          SettingsScreen(
+            entitlementController: widget.entitlementController,
+            currentTimeProvider: widget.currentDateProvider,
+            debugEntitlementSource: widget.debugEntitlementSource,
+          ),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -97,6 +109,12 @@ class _CookbookHomeScreenState extends State<CookbookHomeScreen> {
             icon: Icon(Icons.shopping_cart_outlined),
             selectedIcon: Icon(Icons.shopping_cart),
             label: 'Shopping list',
+          ),
+          NavigationDestination(
+            key: ValueKey<String>('settings-destination'),
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'Settings',
           ),
         ],
       ),
