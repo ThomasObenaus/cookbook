@@ -48,9 +48,9 @@ the application provides usable paid functionality.
 
 ### Goal
 
-Establish the application states, onboarding, settings, and test subscription
-infrastructure needed for future paid sharing without changing where cookbook
-data is stored. All cookbook data remains local in this increment.
+Establish the application states, onboarding, and settings needed for future
+paid sharing without changing where cookbook data is stored. All cookbook data
+remains local in this increment, and no purchase is possible.
 
 ### Included
 
@@ -64,8 +64,7 @@ data is stored. All cookbook data remains local in this increment.
 - Add a Settings page that:
   - identifies the current cookbook as local;
   - explains that local cookbooks cannot invite members;
-  - exposes an upgrade or subscription test entry point;
-  - exposes purchase restoration when test billing is enabled;
+  - explains that sharing is planned and will require an owner subscription;
   - shows the current entitlement status; and
   - shows an `Invite members` preview that is disabled with honest explanatory
     text.
@@ -80,29 +79,37 @@ data is stored. All cookbook data remains local in this increment.
   - on hold;
   - expired;
   - verification unavailable.
-- Define injected entitlement and billing boundaries so widget and controller
-  tests do not contact Google Play or Supabase.
+- Define an injected entitlement source so widget and controller tests do not
+  contact Google Play or Supabase, and so real billing can replace it later
+  without changing the controller, settings UI, or gating rules.
+- Provide a debug-only way to exercise every entitlement state on a device, and
+  exclude it from release builds.
 - Preserve all existing local repositories and local data.
-- Ensure a purchase, cancellation, or entitlement-state change never uploads,
-  deletes, or silently relinks local cookbook data.
-- Configure any real Google Play product used by this increment as an internal
-  test product only. Do not make the subscription publicly purchasable.
+- Ensure an entitlement-state change never uploads, deletes, or silently
+  relinks local cookbook data.
+- Add no purchase flow. No user can be charged anywhere in the app.
 
-If end-to-end Google Play Billing is implemented in this increment, it must also
-include:
+### Deferred to a Later Increment
 
+Real purchasing is deliberately not part of this increment, because no paid
+feature exists yet. The following work moves to the increment that introduces
+shared cookbooks:
+
+- Google Play Billing integration;
 - Supabase authentication before starting or restoring a purchase;
 - Google Play purchase and restore handling;
 - server-side verification through a Supabase Edge Function;
 - verification through the Google Play Developer API;
 - binding each purchase token to one Supabase user;
 - server-controlled entitlement persistence;
-- purchase acknowledgement after successful verification;
-- refresh on application start and resume; and
-- explicit handling of pending, cancelled, grace-period, on-hold, expired,
-  revoked, and temporarily unverifiable subscriptions.
+- purchase acknowledgement after successful verification; and
+- explicit handling of revoked and refunded subscriptions.
 
-Client-side Google Play state alone must not grant an entitlement. Real-time
+The injected entitlement source added in this increment is the seam that the
+billing work plugs into. Its production implementation reports that sharing is
+unavailable, which is accurate while no paid feature exists.
+
+Client-side Google Play state alone must never grant an entitlement. Real-time
 Developer Notifications, or an equivalent authoritative server-side refresh
 strategy, are required before subscriptions are released publicly.
 
@@ -121,10 +128,10 @@ strategy, are required before subscriptions are released publicly.
 
 - A local user sees `Local cookbook` and an explanation that the data remains on
   this device.
-- A user without an entitlement sees the test upgrade entry point when billing
-  testing is enabled.
-- An active test entitlement is shown accurately but does not imply that local
-  data has moved to Supabase.
+- A user without an entitlement sees an explanation that sharing is planned, not
+  a purchase action.
+- A simulated active entitlement is shown accurately but does not imply that
+  local data has moved to Supabase.
 - A cancelled subscription remains active until its verified expiration time,
   which is displayed.
 - Pending, grace-period, on-hold, expired, and verification-unavailable states
@@ -159,26 +166,23 @@ strategy, are required before subscriptions are released publicly.
 - The invitation preview is disabled and does not perform an action.
 - Entitlement state is represented by the documented typed states, not by a
   user-controlled paid-mode toggle.
-- A pending or failed test purchase never grants an active entitlement.
-- When end-to-end billing is included, an active entitlement is granted only
-  after server-side Google Play verification.
-- Cancelling automatic renewal retains the entitlement until the verified
-  expiration time.
+- Cancelling automatic renewal retains the entitlement until its expiration
+  time.
 - Temporary verification failure does not silently change an active user to
   expired or an unpaid user to active.
-- Purchase restoration, when billing testing is enabled, binds the verified
-  purchase to the authenticated Supabase user.
-- No production user can be charged while shared cookbook functionality remains
-  unavailable.
+- No purchase can be started anywhere in the app, so no user can be charged
+  while shared cookbook functionality remains unavailable.
 
 ## Later Increments
 
-1. Create the Supabase shared-cookbook schema, authentication, membership, and
-   Row-Level Security policies.
-2. Let an entitled user convert a local cookbook into their one owned shared
+1. Add Google Play Billing, Supabase authentication, and server-side purchase
+   verification so a sharing entitlement can be purchased and trusted.
+2. Create the Supabase shared-cookbook schema, membership, and Row-Level
+   Security policies.
+3. Let an entitled user convert a local cookbook into their one owned shared
    cookbook through a resumable and verifiable migration.
-3. Add owner-created invitations and invitation acceptance for members who do
+4. Add owner-created invitations and invitation acceptance for members who do
    not need their own subscription.
-4. Add switching between the local cookbook, the owned shared cookbook, and
+5. Add switching between the local cookbook, the owned shared cookbook, and
    invited shared cookbooks.
-5. Add offline synchronization for shared cookbooks if required.
+6. Add offline synchronization for shared cookbooks if required.
