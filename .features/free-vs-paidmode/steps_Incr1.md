@@ -5,25 +5,25 @@ its focused check are checked.
 
 ## 1. Add the Entitlement Domain Model
 
-- [ ] Create an exhaustive `EntitlementStatus` value with:
+- [x] Create an exhaustive `EntitlementStatus` value with:
   `unknown`, `sharingUnavailable`, `notEntitled`, `purchasePending`, `active`,
   `cancelledUntilExpiration`, `gracePeriod`, `onHold`, `expired`, and
   `verificationUnavailable`.
-- [ ] Create an immutable `SharingEntitlement` value with status, optional
+- [x] Create an immutable `SharingEntitlement` value with status, optional
   expiration, and optional last-known status.
-- [ ] Validate that `cancelledUntilExpiration` and `gracePeriod` require a
+- [x] Validate that `cancelledUntilExpiration` and `gracePeriod` require a
   future-capable expiration timestamp.
-- [ ] Validate that `verificationUnavailable` carries a last-known status when
+- [x] Validate that `verificationUnavailable` carries a last-known status when
   one exists and never presents a fresh active entitlement by accident.
-- [ ] Implement `allowsSharingOwnership(DateTime now)` as the only ownership
+- [x] Implement `allowsSharingOwnership(DateTime now)` as the only ownership
   entitlement decision.
-- [ ] Allow ownership only for active, grace-period, and not-yet-expired
+- [x] Allow ownership only for active, grace-period, and not-yet-expired
   cancelled states.
-- [ ] Evaluate `verificationUnavailable` from its last-known state without
+- [x] Evaluate `verificationUnavailable` from its last-known state without
   turning an unavailable check into a new entitlement.
-- [ ] Add unit tests for every status, expiration boundary, invalid
+- [x] Add unit tests for every status, expiration boundary, invalid
   combinations, and immutable values.
-- [ ] Run the focused model tests:
+- [x] Run the focused model tests:
 
 ```bash
 flutter test test/features/sharing/models
@@ -31,23 +31,23 @@ flutter test test/features/sharing/models
 
 ## 2. Add Durable App Preferences
 
-- [ ] Define a small preferences model containing onboarding completion.
-- [ ] Store preferences in `cookbook/app_preferences.json` below the application
+- [x] Define a small preferences model containing onboarding completion.
+- [x] Store preferences in `cookbook/app_preferences.json` below the application
   support directory.
-- [ ] Validate schema version, required fields, and timestamp format.
-- [ ] Treat a missing preferences file as first launch.
-- [ ] Treat malformed or unsupported preferences as first launch and preserve
+- [x] Validate schema version, required fields, and timestamp format.
+- [x] Treat a missing preferences file as first launch.
+- [x] Treat malformed or unsupported preferences as first launch and preserve
   the existing local cookbook data.
-- [ ] Write preferences through a temporary file and atomic rename.
-- [ ] Clean up a failed temporary write without replacing the last valid file.
-- [ ] Convert filesystem failures into a typed exception with a friendly
+- [x] Write preferences through a temporary file and atomic rename.
+- [x] Clean up a failed temporary write without replacing the last valid file.
+- [x] Convert filesystem failures into a typed exception with a friendly
   message, cause, and stack trace.
-- [ ] Never store purchase tokens, Supabase credentials, account identifiers, or
+- [x] Never store purchase tokens, Supabase credentials, account identifiers, or
   entitlement secrets in preferences.
-- [ ] Add an in-memory fake preferences store for widget and integration tests.
-- [ ] Test missing, valid, malformed, unsupported, round-trip, and failed-write
+- [x] Add an in-memory fake preferences store for widget and integration tests.
+- [x] Test missing, valid, malformed, unsupported, round-trip, and failed-write
   behavior.
-- [ ] Run the focused preferences tests:
+- [x] Run the focused preferences tests:
 
 ```bash
 flutter test test/features/sharing/data/app_preferences_store_test.dart
